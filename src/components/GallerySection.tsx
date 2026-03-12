@@ -511,16 +511,63 @@ const GallerySection = () => {
           flex-direction: row;
           gap: 18px;
           margin-bottom: 20px;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding-right: 20px;
         }
 
-        /* Mobile */
-        @media (max-width: 900px) {
-          .gs-row { flex-wrap: wrap; }
-          .gs-row > * { width: calc(50% - 9px) !important; height: 200px !important; }
+        /* Desktop - normal layout */
+        @media (min-width: 1025px) {
+          .gs-row { overflow-x: visible; }
         }
-        @media (max-width: 540px) {
-          .gs-row > * { width: 100% !important; height: 220px !important; }
-          .gs-wm { font-size: 20vw !important; }
+
+        /* Tablet - 900px to 1024px */
+        @media (max-width: 1024px) {
+          .gs-row { overflow-x: auto; }
+          .gs-row > * { height: 260px !important; }
+        }
+
+        /* Tablet - 768px to 899px */
+        @media (max-width: 899px) {
+          .gs-row {
+            flex-wrap: wrap;
+            overflow-x: visible;
+            gap: 14px;
+            margin-bottom: 16px;
+          }
+          .gs-row > * {
+            width: calc(50% - 7px) !important;
+            height: 220px !important;
+            flex: 0 0 calc(50% - 7px);
+          }
+        }
+
+        /* Mobile - 640px to 767px */
+        @media (max-width: 767px) {
+          .gs-row {
+            gap: 12px;
+            margin-bottom: 14px;
+          }
+          .gs-row > * {
+            width: calc(50% - 6px) !important;
+            height: 200px !important;
+            flex: 0 0 calc(50% - 6px);
+          }
+          .gs-wm { font-size: 12vw !important; }
+        }
+
+        /* Mobile - up to 639px */
+        @media (max-width: 639px) {
+          .gs-row {
+            gap: 12px;
+            margin-bottom: 14px;
+          }
+          .gs-row > * {
+            width: 100% !important;
+            height: 200px !important;
+            flex: 0 0 100%;
+          }
+          .gs-wm { font-size: 14vw !important; }
         }
       `}</style>
 
@@ -537,7 +584,7 @@ const GallerySection = () => {
           position: "relative",
           background: "#f5f4f2",
           overflow: "hidden",
-          paddingBottom: 90,
+          paddingBottom: "clamp(40px, 10vh, 90px)",
           paddingTop: 0,
           minHeight: "100vh",
         }}
@@ -575,13 +622,19 @@ const GallerySection = () => {
           style={{
             position: "relative",
             zIndex: 1,
-            paddingTop: 110,
-            paddingLeft: 40,
+            paddingTop: "clamp(60px, 8vw, 110px)",
+            paddingLeft: "clamp(12px, 4vw, 40px)",
+            paddingRight: "clamp(12px, 4vw, 40px)",
             overflowX: "hidden",
           }}
         >
           {/* ROW 1 — slides from LEFT */}
-          <div className="gs-row">
+          <div
+            className="gs-row"
+            style={{
+              position: "relative",
+            }}
+          >
             {row1Config.map(({ item, w, rounded }, i) => (
               <ScrollCard
                 key={item.id}
@@ -592,13 +645,23 @@ const GallerySection = () => {
                 index={i}
                 sectionRef={sectionRef}
                 direction="left"
-                style={{ width: w, height: 375, flexShrink: 0 }}
+                style={{
+                  width: w,
+                  minWidth: w,
+                  height: 375,
+                  flexShrink: 0,
+                }}
               />
             ))}
           </div>
 
           {/* ROW 2 — slides from RIGHT */}
-          <div className="gs-row">
+          <div
+            className="gs-row"
+            style={{
+              position: "relative",
+            }}
+          >
             {row2Config.map(({ item, w, rounded }, i) => (
               <ScrollCard
                 key={item.id}
@@ -609,7 +672,12 @@ const GallerySection = () => {
                 index={i}
                 sectionRef={sectionRef}
                 direction="right"
-                style={{ width: w, height: 355, flexShrink: 0 }}
+                style={{
+                  width: w,
+                  minWidth: w,
+                  height: 355,
+                  flexShrink: 0,
+                }}
               />
             ))}
           </div>
