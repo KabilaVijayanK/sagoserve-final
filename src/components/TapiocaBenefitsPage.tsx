@@ -1,577 +1,613 @@
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { useMemo, useRef, useState } from "react";
-import { Shirt, Utensils, Droplets, Pill, FileText } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 
-const benefits = [
+// ─── HEALTH BENEFITS DATA ──────────────────────────────────────────────────────
+const healthBenefits = [
   {
     id: "01",
-    text: "Supports Baby's Growth",
-    desc: "Rich in essential nutrients that fuel fetal development at every stage.",
+    title: "Gluten – Free Alternative",
+    desc: "It is an ideal substitute for wheat for people with gluten intolerance.",
+    img: "/icon 1.png",
   },
   {
     id: "02",
-    text: "Strengthens Bones & Muscles",
-    desc: "Natural calcium and mineral content builds lasting skeletal strength.",
+    title: "Rich in Antioxidants",
+    desc: "Contains antioxidants that protect the body from cell damage.",
+    img: "/icon 2.png",
   },
   {
     id: "03",
-    text: "Boosts Energy Levels",
-    desc: "Complex carbohydrates provide sustained, clean energy throughout the day.",
+    title: "Strengthens Bones",
+    desc: "Contains calcium and magnesium that support bone strength and help reduce the risk of arthritis and osteoporosis.",
+    img: "/icon 3.png",
   },
   {
     id: "04",
-    text: "Promotes Heart Health",
-    desc: "Zero cholesterol profile supports a healthy cardiovascular system.",
+    title: "Supports Child Growth",
+    desc: "Contributes to healthy growth and development in children.",
+    img: "/icon 4.png",
   },
   {
     id: "05",
-    text: "Regulates Blood Pressure",
-    desc: "Natural potassium content helps maintain optimal blood pressure levels.",
+    title: "Boosts Energy Levels",
+    desc: "As a pure, natural carbohydrate source, it provides instant energy—great for athletes and post-fasting recovery.",
+    img: "/icon 5.png",
   },
   {
     id: "06",
-    text: "Improves Digestion",
-    desc: "Gentle on the stomach; supports smooth and healthy gut function.",
+    title: "Improves Digestion",
+    desc: "It helps prevent constipation, bloating and indigestion.",
+    img: "/icon 6.png",
   },
 ];
 
-const industries = [
-  { name: "Textile Industry", Icon: Shirt, desc: "Used as a sizing agent in fabric processing and finishing." },
-  { name: "Food Processing", Icon: Utensils, desc: "A key thickener and stabilizer in a vast range of food products." },
-  { name: "Adhesive Industry", Icon: Droplets, desc: "Forms strong, eco-friendly bonds in packaging and labeling." },
-  { name: "Pharmaceutical Industry", Icon: Pill, desc: "Serves as an excipient in tablet binding and coating." },
-  { name: "Paper Industry", Icon: FileText, desc: "Improves paper surface smoothness and printing quality." },
+// ─── INDUSTRY DATA ─────────────────────────────────────────────────────────────
+const topIndustries = [
+  {
+    id: "01",
+    title: "Food Processing Industries",
+    desc: "Used as a natural thickener and stabilizer in food products.",
+    iconSrc: "/industry-food.png",
+  },
+  {
+    id: "02",
+    title: "Adhesive & Glue Manufacturing Industries",
+    desc: "Provides strong bonding for industrial adhesives and glues.",
+    iconSrc: "/industry-adhesive.png",
+  },
+  {
+    id: "03",
+    title: "Paper Mills",
+    desc: "Improves paper strength, texture and print quality.",
+    iconSrc: "/industry-paper.png",
+  },
+  {
+    id: "04",
+    title: "Textile Manufacturing",
+    desc: "Used for yarn sizing and fabric finishing.",
+    iconSrc: "/industry-textile.png",
+  },
 ];
 
-function BenefitCard({ item, index }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
-  const [hovered, setHovered] = useState(false);
+const bottomIndustries = [
+  {
+    id: "01",
+    title: "Packaging Industries",
+    desc: "Used in corrugated boards and packaging adhesives.",
+    iconSrc: "/industry-packaging.png",
+  },
+  {
+    id: "02",
+    title: "Pharmaceutical Companies",
+    desc: "Acts as a binder and filler in tablets.",
+    iconSrc: "/industry-pharma.png",
+  },
+  {
+    id: "03",
+    title: "Construction & Paint Industries",
+    desc: "Improves binding and viscosity in paints and coatings.",
+    iconSrc: "/industry-construction.png",
+  },
+  {
+    id: "04",
+    title: "Animal Feed Industries",
+    desc: "Provides energy and binding in animal feed.",
+    iconSrc: "/industry-animal.png",
+  },
+];
+
+// ─── FALLBACK SVG ICONS ───────────────────────────────────────────────────────
+const SVG_FALLBACKS: Record<string, string> = {
+  "/industry-food.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="5" y="17" width="30" height="18" rx="4" fill="#7a1a1a" opacity=".9"/><rect x="11" y="9" width="6" height="10" rx="2" fill="#7a1a1a" opacity=".65"/><rect x="23" y="11" width="6" height="8" rx="2" fill="#7a1a1a" opacity=".65"/><circle cx="13" cy="28" r="3.5" fill="white" opacity=".5"/><circle cx="27" cy="28" r="3.5" fill="white" opacity=".5"/></svg>`,
+  "/industry-adhesive.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="17" y="3" width="6" height="19" rx="3" fill="#7a1a1a" opacity=".85"/><ellipse cx="20" cy="26" rx="11" ry="6.5" fill="#7a1a1a" opacity=".7"/><rect x="9" y="31" width="22" height="6" rx="2.5" fill="#7a1a1a" opacity=".6"/><line x1="20" y1="22" x2="20" y2="31" stroke="white" strokeWidth="2.5" opacity=".5"/></svg>`,
+  "/industry-paper.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="7" y="5" width="26" height="32" rx="3" fill="#7a1a1a" opacity=".75"/><rect x="12" y="12" width="16" height="2" rx="1" fill="white" opacity=".55"/><rect x="12" y="17" width="16" height="2" rx="1" fill="white" opacity=".45"/><rect x="12" y="22" width="10" height="2" rx="1" fill="white" opacity=".35"/><rect x="5" y="9" width="4" height="24" rx="2" fill="#7a1a1a" opacity=".5"/></svg>`,
+  "/industry-textile.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><circle cx="20" cy="20" r="11" stroke="#7a1a1a" strokeWidth="3.5" opacity=".85"/><circle cx="20" cy="20" r="4.5" fill="#7a1a1a" opacity=".8"/><line x1="20" y1="3" x2="20" y2="9" stroke="#7a1a1a" strokeWidth="3" opacity=".65"/><line x1="20" y1="31" x2="20" y2="37" stroke="#7a1a1a" strokeWidth="3" opacity=".65"/><line x1="3" y1="20" x2="9" y2="20" stroke="#7a1a1a" strokeWidth="3" opacity=".55"/><line x1="31" y1="20" x2="37" y2="20" stroke="#7a1a1a" strokeWidth="3" opacity=".55"/></svg>`,
+  "/industry-packaging.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="7" y="15" width="26" height="20" rx="3" fill="#7a1a1a" opacity=".75"/><path d="M7 15 L20 6 L33 15" fill="#7a1a1a" opacity=".6"/><line x1="20" y1="15" x2="20" y2="35" stroke="white" strokeWidth="1.8" opacity=".45"/><line x1="7" y1="23" x2="33" y2="23" stroke="white" strokeWidth="1.8" opacity=".35"/></svg>`,
+  "/industry-pharma.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="14" y="3" width="12" height="11" rx="3" fill="#7a1a1a" opacity=".55"/><rect x="9" y="12" width="22" height="25" rx="4.5" fill="#7a1a1a" opacity=".8"/><rect x="16" y="21" width="8" height="2.5" rx="1.2" fill="white" opacity=".65"/><rect x="19" y="17.5" width="2.5" height="9" rx="1.2" fill="white" opacity=".65"/></svg>`,
+  "/industry-construction.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><rect x="5" y="27" width="30" height="11" rx="2.5" fill="#7a1a1a" opacity=".75"/><rect x="9" y="18" width="22" height="11" rx="2.5" fill="#7a1a1a" opacity=".6"/><rect x="13" y="12" width="14" height="8" rx="2" fill="#7a1a1a" opacity=".45"/><rect x="16" y="6" width="8" height="8" rx="1.5" fill="#7a1a1a" opacity=".32"/></svg>`,
+  "/industry-animal.png": `<svg viewBox="0 0 40 40" width="26" height="26" fill="none"><ellipse cx="20" cy="26" rx="13" ry="11" fill="#7a1a1a" opacity=".75"/><circle cx="13" cy="13" r="6" fill="#7a1a1a" opacity=".7"/><circle cx="27" cy="13" r="6" fill="#7a1a1a" opacity=".7"/><ellipse cx="20" cy="26" rx="6" ry="4.5" fill="white" opacity=".25"/></svg>`,
+};
+
+// ─── SIDEBAR WIDTH CONSTANT ───────────────────────────────────────────────────
+const SIDEBAR_W = 180;
+const SIDEBAR_PAD_RIGHT = 102;
+const CONTENT_PAD_LEFT = 32;
+const INDENT = SIDEBAR_W + SIDEBAR_PAD_RIGHT + CONTENT_PAD_LEFT; // ~244px
+
+// ─── ANIMATED CROSS-LINE WRAPPER ──────────────────────────────────────────────
+function CrossLineHeader({
+  children,
+  verticalHeight = 260,
+}: {
+  children: React.ReactNode;
+  verticalHeight?: number;
+}) {
+  return (
+    <div style={{ position: "relative" }}>
+      {/* Horizontal rule */}
+      <motion.div
+        initial={{ scaleX: 0 }}
+        whileInView={{ scaleX: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          height: "1px",
+          background: "#d1d1d1",
+          width: "50%",
+          transformOrigin: "left center",
+        }}
+      />
+      {/* Vertical rule drops from the sidebar/content boundary */}
+      <motion.div
+        initial={{ scaleY: 0 }}
+        whileInView={{ scaleY: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.75, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          position: "absolute",
+          top: -40,
+          left: `${SIDEBAR_W}px`,
+          width: "1px",
+          height: verticalHeight,
+          background: "#d1d1d1",
+          transformOrigin: "top center",
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+// ─── HEALTH BENEFIT CARD ──────────────────────────────────────────────────────
+function BenefitCard({
+  item,
+  index,
+}: {
+  item: (typeof healthBenefits)[0];
+  index: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-30px" });
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, x: index % 2 === 0 ? -60 : 60, y: 30 }}
-      animate={isInView ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ duration: 0.7, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ cursor: "default" }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.09,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+        gap: "0",
+      }}
     >
+      {/* Icon circle + number badge */}
       <div
         style={{
           position: "relative",
-          background: hovered
-            ? "linear-gradient(135deg, #5f9bf5 0%, #3a78e8 100%)"
-            : "white",
-          border: hovered ? "1.5px solid #5f9bf5" : "1.5px solid #e8edf5",
-          borderRadius: "20px",
-          padding: "28px 28px 24px",
-          boxShadow: hovered
-            ? "0 24px 60px rgba(95,155,245,0.35)"
-            : "0 4px 24px rgba(0,0,0,0.05)",
-          transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
-          overflow: "hidden",
+          marginBottom: "12px",
+          display: "inline-block",
         }}
       >
-        {/* Floating number watermark */}
+        {/* Circular icon */}
+        <div
+          style={{
+            width: 76,
+            height: 76,
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: "2px solid #e5e7eb",
+            background: "#ece9e3",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <img
+            src={item.img}
+            alt={item.title}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={(e) => {
+              const el = e.target as HTMLImageElement;
+              el.style.display = "none";
+              if (el.parentElement) {
+                el.parentElement.style.fontSize = "32px";
+                el.parentElement.innerText = "🌿";
+              }
+            }}
+          />
+        </div>
+        {/* Number badge — top right, blue */}
         <span
           style={{
             position: "absolute",
-            top: "-14px",
-            right: "20px",
-            fontSize: "80px",
-            fontWeight: "900",
-            fontFamily: "'Playfair Display', serif",
-            color: hovered ? "rgba(255,255,255,0.12)" : "rgba(95,155,245,0.07)",
+            top: "-4px",
+            right: "-14px",
+            fontSize: "11px",
+            fontWeight: "700",
+            color: "#2155a3",
+            fontFamily: "'DM Sans', sans-serif",
             lineHeight: 1,
-            pointerEvents: "none",
-            userSelect: "none",
-            transition: "color 0.4s",
           }}
         >
           {item.id}
         </span>
-
-        {/* Number badge */}
-        <div
-          style={{
-            display: "inline-block",
-            background: hovered ? "rgba(255,255,255,0.2)" : "rgba(95,155,245,0.1)",
-            color: hovered ? "white" : "#5f9bf5",
-            borderRadius: "8px",
-            padding: "3px 10px",
-            fontSize: "11px",
-            fontWeight: "700",
-            letterSpacing: "2px",
-            marginBottom: "14px",
-            fontFamily: "monospace",
-            transition: "all 0.4s",
-          }}
-        >
-          {item.id}
-        </div>
-
-        <h4
-          style={{
-            fontSize: "16px",
-            fontWeight: "700",
-            fontFamily: "'Playfair Display', serif",
-            color: hovered ? "white" : "#0f1923",
-            marginBottom: "10px",
-            lineHeight: 1.3,
-            transition: "color 0.4s",
-          }}
-        >
-          {item.text}
-        </h4>
-
-        <p
-          style={{
-            fontSize: "13px",
-            color: hovered ? "rgba(255,255,255,0.85)" : "#7a8a9a",
-            lineHeight: 1.65,
-            fontFamily: "'DM Sans', sans-serif",
-            transition: "color 0.4s",
-            margin: 0,
-          }}
-        >
-          {item.desc}
-        </p>
-
-        {/* Bottom accent line */}
-        <motion.div
-          animate={{ width: hovered ? "100%" : "0%" }}
-          transition={{ duration: 0.4 }}
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            height: "3px",
-            background: "rgba(255,255,255,0.4)",
-            borderRadius: "0 0 20px 20px",
-          }}
-        />
       </div>
+
+      <h4
+        style={{
+          fontSize: "13.5px",
+          fontWeight: "700",
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          color: "#111827",
+          margin: "0 0 8px",
+          lineHeight: 1.3,
+        }}
+      >
+        {item.title}
+      </h4>
+      <p
+        style={{
+          fontSize: "12px",
+          color: "#6b7280",
+          lineHeight: 1.65,
+          margin: 0,
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        {item.desc}
+      </p>
     </motion.div>
   );
 }
 
-export default function TapiocaBenefitsPremium() {
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, -80]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+// ─── INDUSTRY CARD ────────────────────────────────────────────────────────────
+function IndustryCard({
+  item,
+  index,
+  delay = 0,
+}: {
+  item: { id: string; title: string; desc: string; iconSrc: string };
+  index: number;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
 
   return (
-    <div style={{ background: "white", fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Google Fonts */}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 28 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{
+        duration: 0.55,
+        delay: delay + index * 0.09,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(33,85,163,0.12)" }}
+      style={{
+        background: "white",
+        borderRadius: "10px",
+        padding: "14px 16px",
+        border: "1px solid #e8edf5",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+        cursor: "default",
+        transition: "box-shadow 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
+        gap: "7px",
+        position: "relative",
+      }}
+    >
+      {/* Number badge — top right, blue */}
+      <span
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "12px",
+          fontSize: "10px",
+          fontWeight: "700",
+          color: "#2155a3",
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        {item.id}
+      </span>
+
+      {/* Icon + title row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Icon box — warm reddish tint background */}
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: "6px",
+            background: "#fdf0f0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Fallback SVG underneath */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            dangerouslySetInnerHTML={{
+              __html:
+                SVG_FALLBACKS[item.iconSrc] ||
+                SVG_FALLBACKS["/industry-food.png"],
+            }}
+          />
+          {/* Real icon overlay */}
+          <img
+            src={item.iconSrc}
+            alt={item.title}
+            width={26}
+            height={26}
+            style={{
+              objectFit: "contain",
+              position: "relative",
+              zIndex: 1,
+            }}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+
+        <h4
+          style={{
+            fontSize: "12.5px",
+            fontWeight: "700",
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            color: "#111827",
+            margin: 0,
+            lineHeight: 1.3,
+            paddingRight: "18px",
+          }}
+        >
+          {item.title}
+        </h4>
+      </div>
+
+      <p
+        style={{
+          fontSize: "11px",
+          color: "#6b7280",
+          lineHeight: 1.6,
+          margin: 0,
+          fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        {item.desc}
+      </p>
+    </motion.div>
+  );
+}
+
+// ─── ROOT EXPORT ──────────────────────────────────────────────────────────────
+export default function TapiocaSections() {
+  return (
+    <div
+      style={{
+        background: "#f5f3ef",
+        fontFamily: "'DM Sans', sans-serif",
+        width: "100%",
+      }}
+    >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+        * { box-sizing: border-box; }
 
-        .blend-text {
-          mix-blend-mode: multiply;
+        .tp-pill {
+          display: inline-flex; align-items: center; gap: 7px;
+          border: 1.5px solid #2d3748; border-radius: 100px;
+          padding: 6px 16px;
+          font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px;
+          text-transform: uppercase; color: #2d3748;
+          font-family: 'DM Sans', sans-serif; white-space: nowrap;
+          background: white;
+        }
+        .tp-pill::before {
+          content: ''; display: inline-block;
+          width: 6px; height: 6px; border-radius: 50%;
+          background: #2d3748; flex-shrink: 0;
         }
 
-        .section-tag::before {
-          content: '';
-          display: inline-block;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #5f9bf5;
-          margin-right: 8px;
-          vertical-align: middle;
+        @media (max-width: 960px) {
+          .main-row       { flex-direction: column !important; }
+          .sidebar        { width: 100% !important; flex-direction: row !important; align-items: center !important; padding-right: 0 !important; padding-bottom: 24px; }
+          .benefits-grid  { grid-template-columns: repeat(2,1fr) !important; }
+          .ind-top        { grid-template-columns: repeat(2,1fr) !important; margin-left: 0 !important; }
+          .ind-bot        { grid-template-columns: repeat(2,1fr) !important; }
         }
-        @media (max-width: 900px) {
-          .tp-benefits-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .tp-industry-grid { grid-template-columns: repeat(3, 1fr) !important; }
-          .tp-container { padding: 0 24px !important; }
-          .tp-section { padding: 48px 0 !important; }
-          .tp-header { margin-bottom: 48px !important; }
-        }
-        @media (max-width: 640px) {
-          .tp-benefits-grid { grid-template-columns: 1fr !important; }
-          .tp-industry-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .tp-stat-strip { grid-template-columns: 1fr !important; }
-          .tp-stat-strip > div { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.2) !important; }
-          .tp-stat-strip > div:last-child { border-bottom: none !important; }
-          .tp-container { padding: 0 16px !important; }
-          .tp-section { padding: 40px 0 !important; }
-          .tp-header { flex-direction: column !important; align-items: flex-start !important; margin-bottom: 36px !important; }
-        }
-        @media (max-width: 480px) {
-          .tp-industry-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 600px) {
+          .benefits-grid { grid-template-columns: 1fr !important; }
+          .ind-top       { grid-template-columns: 1fr !important; }
+          .ind-bot       { grid-template-columns: 1fr !important; }
+          .tp-container  { padding: 0 20px !important; }
         }
       `}</style>
 
-
-      {/* ═══════════════════════════════════════════
-          HEALTH BENEFITS SECTION
-      ═══════════════════════════════════════════ */}
-      <section
-        className="tp-section"
-        style={{
-          background: "white",
-          padding: "80px 0",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Large blending background text */}
+      {/* ═══════════════════════════════════════════════════════════════
+          SECTION 1 — HEALTH BENEFITS
+      ═══════════════════════════════════════════════════════════════ */}
+      <section style={{ background: "#f5f3ef", paddingBottom: "64px" }}>
         <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%) rotate(-6deg)",
-            fontSize: "clamp(60px, 14vw, 180px)",
-            fontWeight: "900",
-            fontFamily: "'Playfair Display', serif",
-            color: "#5f9bf5",
-            opacity: 0.04,
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            userSelect: "none",
-            letterSpacing: "-4px",
-          }}
+          className="tp-container"
+          style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 40px" }}
         >
-          BENEFITS
-        </div>
-
-        <div className="tp-container" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 48px" }}>
-
-          {/* Section header — split layout like image */}
-          <div
-            className="tp-header"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: "80px",
-              gap: "48px",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <motion.span
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="section-tag"
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  letterSpacing: "3px",
-                  textTransform: "uppercase",
-                  color: "#5f9bf5",
-                  background: "rgba(95,155,245,0.08)",
-                  padding: "7px 16px 7px 10px",
-                  borderRadius: "100px",
-                  border: "1px solid rgba(95,155,245,0.2)",
-                  display: "inline-block",
-                  marginBottom: "24px",
-                }}
-              >
-                Wellness
-              </motion.span>
-
-              <motion.h2
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  fontSize: "clamp(32px, 4.5vw, 62px)",
-                  fontWeight: "900",
-                  fontFamily: "'Playfair Display', serif",
-                  lineHeight: 1.1,
-                  letterSpacing: "-1.5px",
-                  color: "#0f1923",
-                  margin: 0,
-                }}
-              >
-                Explore The Health Benefits
-                <br />
-                <span
-                  style={{
-                    color: "#5f9bf5",
-                    fontStyle: "italic",
-                  }}
-                >
-                  of Tapioca Sago
-                </span>
-              </motion.h2>
-            </div>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2, duration: 0.6 }}
+          <CrossLineHeader verticalHeight={360}>
+            <div
+              className="main-row"
               style={{
-                maxWidth: "380px",
-                fontSize: "15px",
-                color: "#7a8a9a",
-                lineHeight: 1.8,
-                margin: 0,
+                display: "flex",
+                alignItems: "flex-start",
+                paddingTop: "28px",
+                gap: "0",
+                marginLeft: "48px",
               }}
             >
-             Tapioca sago (Javvarisi) is a nutritious and easily digestible food that provides quick energy and supports a balanced diet. Rich in carbohydrates and naturally gluten-free, it is widely used in healthy and traditional recipes for people of all ages.
-            </motion.p>
-          </div>
-
-          {/* Benefit cards grid */}
-          <div
-            className="tp-benefits-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "20px",
-            }}
-          >
-            {benefits.map((item, i) => (
-              <BenefitCard key={i} item={item} index={i} />
-            ))}
-          </div>
-
-          {/* Center stat strip */}
-          <motion.div
-            className="tp-stat-strip"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3, duration: 0.7 }}
-            style={{
-              marginTop: "64px",
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              background: "linear-gradient(135deg, #5f9bf5 0%, #3a78e8 100%)",
-              borderRadius: "20px",
-              overflow: "hidden",
-              boxShadow: "0 20px 60px rgba(95,155,245,0.3)",
-            }}
-          >
-            {[
-              { num: "100%", label: "Natural & Organic" },
-              { num: "6+", label: "Proven Health Benefits" },
-              { num: "50+", label: "Years of Heritage" },
-            ].map((stat, i) => (
+              {/* ── LEFT SIDEBAR ── */}
               <div
-                key={i}
+                className="sidebar"
                 style={{
-                  padding: "40px 32px",
-                  textAlign: "center",
-                  borderRight: i < 2 ? "1px solid rgba(255,255,255,0.2)" : "none",
+                  width: `${SIDEBAR_W}px`,
+                  flexShrink: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  paddingRight: `${SIDEBAR_PAD_RIGHT}px`,
+                  gap: "16px",
                 }}
               >
-                <div
-                  style={{
-                    fontSize: "clamp(32px, 4vw, 52px)",
-                    fontWeight: "900",
-                    fontFamily: "'Playfair Display', serif",
-                    color: "white",
-                    lineHeight: 1,
-                    marginBottom: "8px",
-                  }}
-                >
-                  {stat.num}
-                </div>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    color: "rgba(255,255,255,0.75)",
-                    letterSpacing: "1.5px",
-                    textTransform: "uppercase",
-                    fontWeight: "500",
-                  }}
-                >
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          INDUSTRIAL USES SECTION
-      ═══════════════════════════════════════════ */}
-      <section
-        className="tp-section"
-        style={{
-          background: "#fdfdfe",
-          padding: "80px 0",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-       
-
-        <div className="tp-container" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 48px" }}>
-
-          {/* Section header */}
-          <div
-            className="tp-header"
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              marginBottom: "72px",
-              flexWrap: "wrap",
-              gap: "32px",
-            }}
-          >
-            <div>
-              <motion.span
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="section-tag"
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  letterSpacing: "3px",
-                  textTransform: "uppercase",
-                  color: "#5f9bf5",
-                  background: "rgba(95,155,245,0.08)",
-                  padding: "7px 16px 7px 10px",
-                  borderRadius: "100px",
-                  border: "1px solid rgba(95,155,245,0.2)",
-                  display: "inline-block",
-                  marginBottom: "24px",
-                }}
-              >
-                Applications
-              </motion.span>
-
-              <motion.h2
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                style={{
-                  fontSize: "clamp(32px, 4vw, 56px)",
-                  fontWeight: "900",
-                  fontFamily: "'Playfair Display', serif",
-                  lineHeight: 1.1,
-                  letterSpacing: "-1.5px",
-                  color: "#0f1923",
-                  margin: 0,
-                }}
-              >
-                Industrial Uses of{" "}
-                <span style={{ color: "#5f9bf5", fontStyle: "italic" }}>
-                  Tapioca Starch
-                </span>
-              </motion.h2>
-            </div>
-
-            {/* Decorative line element */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ width: "60px", height: "2px", background: "#5f9bf5", opacity: 0.3 }} />
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#5f9bf5" }} />
-              <div style={{ width: "60px", height: "2px", background: "#5f9bf5", opacity: 0.3 }} />
-            </div>
-          </div>
-
-          {/* Industry cards — 5 across */}
-          <div
-            className="tp-industry-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(5, 1fr)",
-              gap: "16px",
-            }}
-          >
-            {industries.map((item, i) => {
-              const Icon = item.Icon;
-              return (
+                {/* Pill label */}
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 50 }}
+                  initial={{ opacity: 0, x: -14 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="tp-pill"
+                >
+                  RECIPES
+                </motion.div>
+
+                {/* Sidebar illustration */}
+                <motion.div
+                  initial={{ opacity: 0, y: 14 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.12, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -10, boxShadow: "0 32px 64px rgba(95,155,245,0.18)" }}
-                  style={{
-                    background: "white",
-                    borderRadius: "20px",
-                    padding: "36px 24px",
-                    textAlign: "center",
-                    border: "1.5px solid #e8edf5",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
-                    transition: "all 0.4s cubic-bezier(0.22,1,0.36,1)",
-                    cursor: "default",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
+                  transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ width: "450px" }}
                 >
-                  {/* Background number */}
-                  <div
+                  <img
+                    src="/photo3.png"
+                    alt="Health & wellness"
                     style={{
-                      position: "absolute",
-                      bottom: "-20px",
-                      right: "-10px",
-                      fontSize: "80px",
-                      fontWeight: "900",
-                      fontFamily: "'Playfair Display', serif",
-                      color: "rgba(95,155,245,0.05)",
-                      lineHeight: 1,
-                      pointerEvents: "none",
-                      userSelect: "none",
+                      width: "100%",
+                      height: "auto",
+                      marginLeft: "-35px",
+                      display: "block",
+                      objectFit: "contain",
+                    }}
+                    onError={(e) => {
+                      const el = e.target as HTMLImageElement;
+                      el.style.display = "none";
+                      const w = el.parentElement!;
+                      w.style.height = "210px";
+                      w.innerHTML = `<svg viewBox="0 0 200 280" fill="none" style="width:148px;height:210px">
+                        <rect x="95" y="197" width="10" height="40" rx="4" fill="#b0c4d8" opacity=".5"/>
+                        <circle cx="100" cy="148" r="58" fill="#7ab5d8" opacity=".12"/>
+                        <circle cx="100" cy="132" r="50" fill="#7ab5d8" opacity=".17"/>
+                        <circle cx="83"  cy="121" r="36" fill="#7ab5d8" opacity=".21"/>
+                        <circle cx="117" cy="117" r="34" fill="#7ab5d8" opacity=".21"/>
+                        <circle cx="100" cy="101" r="42" fill="#7ab5d8" opacity=".26"/>
+                        <circle cx="89"  cy="87"  r="28" fill="#7ab5d8" opacity=".26"/>
+                        <circle cx="111" cy="85"  r="26" fill="#7ab5d8" opacity=".24"/>
+                        <circle cx="100" cy="69"  r="30" fill="#7ab5d8" opacity=".29"/>
+                        <circle cx="100" cy="55"  r="22" fill="#7ab5d8" opacity=".3"/>
+                        <circle cx="100" cy="41"  r="18" fill="#7ab5d8" opacity=".26"/>
+                        <circle cx="100" cy="29"  r="12" fill="#7ab5d8" opacity=".22"/>
+                        <circle cx="100" cy="208" r="9"  fill="#8fb8d0" opacity=".8"/>
+                        <ellipse cx="100" cy="226" rx="16" ry="8" fill="#8fb8d0" opacity=".6"/>
+                        <line x1="84" y1="221" x2="76" y2="230" stroke="#8fb8d0" strokeWidth="3" strokeLinecap="round" opacity=".7"/>
+                        <line x1="116" y1="221" x2="124" y2="230" stroke="#8fb8d0" strokeWidth="3" strokeLinecap="round" opacity=".7"/>
+                        <ellipse cx="85" cy="233" rx="10" ry="5" fill="#8fb8d0" opacity=".5"/>
+                        <ellipse cx="115" cy="233" rx="10" ry="5" fill="#8fb8d0" opacity=".5"/>
+                      </svg>`;
+                    }}
+                  />
+                </motion.div>
+              </div>
+
+              {/* ── RIGHT CONTENT ── */}
+              <div style={{ flex: 1, paddingLeft: `${CONTENT_PAD_LEFT}px` }}>
+                {/* Heading block */}
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ marginBottom: "28px" }}
+                >
+                  <h2
+                    style={{
+                      fontSize: "clamp(22px, 3vw, 34px)",
+                      fontWeight: "800",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: "#111827",
+                      margin: "0",
+                      lineHeight: 1.15,
+                      letterSpacing: "-0.4px",
                     }}
                   >
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-
-                  {/* Icon */}
-                  <div
+                    Health Benefits
+                  </h2>
+                  <h2
                     style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "16px",
-                      background: "rgba(95,155,245,0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      margin: "0 auto 20px",
+                      fontSize: "clamp(22px, 3vw, 34px)",
+                      fontWeight: "800",
+                      fontFamily: "'Plus Jakarta Sans', sans-serif",
+                      color: "#5f9bf5",
+                      margin: "0 0 14px",
+                      lineHeight: 1.15,
+                      letterSpacing: "-0.4px",
                     }}
                   >
-                    <Icon style={{ width: "24px", height: "24px", color: "#5f9bf5" }} strokeWidth={1.8} />
-                  </div>
-
-                  <h4
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "700",
-                      fontFamily: "'Playfair Display', serif",
-                      color: "#0f1923",
-                      marginBottom: "10px",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {item.name}
-                  </h4>
-
+                    of Tapioca Sago
+                  </h2>
                   <p
                     style={{
-                      fontSize: "12px",
-                      color: "#7a8a9a",
-                      lineHeight: 1.65,
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      lineHeight: 1.75,
+                      maxWidth: "560px",
                       margin: 0,
+                      fontFamily: "'DM Sans', sans-serif",
                     }}
                   >
-                    {item.desc}
+                    Tapioca sago (Javvarisi) is a nutritious and easily
+                    digestible food that provides quick energy and supports a
+                    balanced diet. Rich in carbohydrates and naturally
+                    gluten-free, it is widely used in healthy and traditional
+                    recipes for people of all ages.
                   </p>
                 </motion.div>
-              );
-            })}
-          </div>
+
+                {/* 3×2 benefit grid */}
+                <div
+                  className="benefits-grid"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "36px 24px",
+                  }}
+                >
+                  {healthBenefits.map((item, i) => (
+                    <BenefitCard key={i} item={item} index={i} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CrossLineHeader>
         </div>
       </section>
+
+     
     </div>
   );
 }

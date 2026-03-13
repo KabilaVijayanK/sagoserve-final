@@ -61,10 +61,10 @@ const HeroUltra = () => {
         className="hu2 hu2-section"
         style={{
           width: "100%",
-          height: "100vh",
-          minHeight: "640px",
+          height: "auto",
+          minHeight: "100vh",
           display: "flex",
-          overflow: "hidden",
+          overflow: "visible",
           background: "#FFFFFF",
           position: "relative",
         }}
@@ -80,8 +80,8 @@ const HeroUltra = () => {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "60px 56px 60px 56px",
-          overflow: "hidden",
+          padding: "80px 56px 80px 56px",
+          overflow: "visible",
         }}>
 
           {/* ── FAINT WATERMARK "SAGOSERVE" ── */}
@@ -94,7 +94,7 @@ const HeroUltra = () => {
             <div style={{
               position: "absolute",
               bottom: "42%",
-              left: "-60px",
+              left: "-20px",
               transform: "translateY(50%)",
               fontSize: "clamp(80px, 11vw, 140px)",
               fontWeight: 900,
@@ -146,14 +146,14 @@ const HeroUltra = () => {
           {/* ── MEGA HEADLINE ──
               Line 1: "Where Purity" — white, 900
               Line 2: "Matters, And" — white
-              Line 3: "Quality Comes" — gold
+              Line 3: "Excellence Comes" — gold
               Line 4: "Alive" — gold
           ── */}
           <div className="hu2-headline" style={{ marginBottom: "24px", overflow: "visible" }}>
             {[
               { text: "Where Purity",    color: "#1a1a2e" },
               { text: "Matters, And",    color: "#1a1a2e" },
-              { text: "Quality Comes",   color: "#5f9bf5" },
+              { text: "Excellence Comes",   color: "#5f9bf5" },
               { text: "Alive",           color: "#5f9bf5" },
             ].map((line, i) => (
               <div key={i} style={{ overflow: "hidden" }}>
@@ -225,11 +225,9 @@ const HeroUltra = () => {
               marginBottom: "36px",
               maxWidth: "520px",
             }}
-          >
-            Whether it's cooperative supply, fair pricing, or a commercial
-            export — we are always dedicated to bringing your vision to life.
-            Our decades of service and the collective strength of hundreds of
-            manufacturers speak better than words.
+          ><br />
+            SAGOSERVE – Salem Starch and Sago Manufacturers’ Service Industrial   Co-operative Society Ltd., is registered under the Tamil Nadu Co-operative Societies Act, 1961, and functions under the administrative control of the Industries Commissioner and Director of Industries and Commerce, Government of Tamil Nadu.<br /><br />
+            The Society was formed to address challenges such as inadequate credit facilities, unorganized marketing, lack of warehousing infrastructure, and exploitation by middlemen.
           </motion.p>
 
           {/* ── CTA PILL — "More About Us →" ── */}
@@ -283,95 +281,31 @@ const HeroUltra = () => {
             flex: "1 1 0",
             position: "relative",
             overflow: "hidden",
-            paddingTop: "40px",
-            paddingBottom: "40px",
-            paddingRight: "40px",
             display: "flex",
-            justifyContent: "flex-end",
+            justifyContent: "center",
             alignItems: "center",
             background: "#FFFFFF",
           }}
         >
-          {/* ── VERTICAL TEXT LABEL — "EXPLORE" (top right) ── */}
-          <motion.div
-            className="hu2-vertlabel"
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            style={{
-              position: "absolute",
-              top: "40px",
-              right: "40px",
-              writingMode: "vertical-rl",
-              textOrientation: "mixed",
-              transform: "rotate(180deg)",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.2em",
-              color: "#5f9bf5",
-              textTransform: "uppercase",
-            }}
-          >
-            Explore
-          </motion.div>
+         
+          
 
-          {/* ── VERTICAL TEXT LABEL — "TOP PARTS" (bottom right) ── */}
-          <motion.div
-            className="hu2-vertlabel"
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ delay: 0.95, duration: 0.8 }}
-            style={{
-              position: "absolute",
-              bottom: "40px",
-              right: "40px",
-              writingMode: "vertical-rl",
-              textOrientation: "mixed",
-              transform: "rotate(180deg)",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.2em",
-              color: "#5f9bf5",
-              textTransform: "uppercase",
-            }}
-          >
-            Top Parts
-          </motion.div>
-
-          {/* Photo without scaling */}
-          <motion.div
+          {/* Photo without container */}
+          <motion.img
             className="hu2-photo"
+            src="photo1.png"
+            alt="Quality facility"
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ delay: 0.3, duration: 1.1 }}
             style={{
-              width: "92%",
-              height: "100%",
-              borderRadius: "28px",
-              overflow: "hidden",
-              boxShadow: "0 20px 60px rgba(95, 155, 245, 0.15)",
-              position: "relative",
+              width: "100%",
+              height: "50%",
+              objectFit: "cover",
+              objectPosition: "center",
+              display: "block",
             }}
-          >
-            {/* DUMMY IMAGE — replace src with your actual image */}
-            <img
-              src="/Photos/Image 2.JPG"
-              alt="Quality facility"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
-              }}
-              onError={(e) => {
-                const el = e.currentTarget as HTMLImageElement;
-                el.style.display = "none";
-                const parent = el.parentElement!;
-                parent.style.background =
-                  "linear-gradient(140deg,#f0f4f8 0%,#e8eef7 55%,#dae5f0 100%)";
-              }}
-            />
-          </motion.div>
+          />
 
           {/* Subtle vignette on left edge of photo for blending */}
           <div
@@ -383,35 +317,7 @@ const HeroUltra = () => {
             }}
           />
 
-          {/* ── SCROLL-UP BUTTON bottom-right ── */}
-          <motion.button
-            className="scroll-btn"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={inView ? { opacity: 1, scale: 1 } : {}}
-            transition={{ delay: 1.0, duration: 0.55, ease: "backOut" }}
-            style={{
-              position: "absolute",
-              bottom: "28px",
-              right: "28px",
-              width: "44px",
-              height: "44px",
-              borderRadius: "50%",
-              background: "#5f9bf5",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "18px",
-              color: "#fff",
-              boxShadow: "0 4px 20px rgba(95, 155, 245, 0.35)",
-              backdropFilter: "blur(8px)",
-              zIndex: 10,
-            }}
-          >
-            ↑
-          </motion.button>
+          
         </div>
 
       </section>

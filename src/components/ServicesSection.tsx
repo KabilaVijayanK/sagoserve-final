@@ -216,13 +216,18 @@ const ServicesSection = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
         .ss, .ss * { font-family: 'Inter', sans-serif !important; box-sizing: border-box; }
         .ss a { text-decoration: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .arrow-btn:hover { background: #111 !important; color: #fff !important; }
         .explore-link:hover { background: #111 !important; }
+        @media (max-width: 900px) {
+          .ss-header-cols { flex-direction: column !important; min-height: auto !important; }
+          .ss-header-left { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(0,0,0,0.12) !important; padding: 24px 20px !important; justify-content: flex-start !important; }
+          .ss-header-right { padding: 24px 0 0 0 !important; }
+        }
       `}</style>
 
       <section
@@ -267,74 +272,109 @@ const ServicesSection = () => {
             zIndex: 1,
           }}
         >
-          {/* "• WHO WE ARE" badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={headerView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "7px",
-              background: "#fff",
-              border: "1px solid rgba(0,0,0,0.10)",
-              borderRadius: "999px",
-              padding: "6px 14px 6px 10px",
-              marginBottom: "32px",
-            }}
-          >
-            <span style={{
-              width: "7px", height: "7px", borderRadius: "50%",
-              background: "#c08a5b", display: "block",
-            }} />
-            <span style={{
-              fontSize: "11px", fontWeight: 600,
-              letterSpacing: "0.18em", color: "#555",
-              textTransform: "uppercase",
-            }}>WHAT WE DO</span>
-          </motion.div>
-
-          {/* BIG HEADLINE — black "Experience" + gold "The Purity Of Salem Sago" */}
-          <div style={{ overflow: "hidden", marginBottom: "24px" }}>
-            <motion.h2
-              initial={{ y: "100%", opacity: 0 }}
-              animate={headerView ? { y: "0%", opacity: 1 } : {}}
-              transition={{ delay: 0.1, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          {/* Two-column header layout */}
+          <div className="ss-header-cols" style={{
+            display: "flex",
+            alignItems: "stretch",
+            minHeight: "160px",
+            position: "relative",
+          }}>
+            {/* Horizontal divider line — across full width at top */}
+            <div
               style={{
-                fontSize: "clamp(36px, 5vw, 68px)",
-                fontWeight: 900,
-                lineHeight: 1.08,
-                letterSpacing: "-0.03em",
-                color: "#111",
-                margin: 0,
+                position: "absolute",
+                top: 0,
+                left: 200,
+                right: 400,
+                
+                width: "500px",
+                height: "1px",
+                background: "rgba(0,0,0,0.15)",
+                zIndex: 0,
+              }}
+            />
+
+            {/* Vertical divider line — at 280px boundary */}
+            <div
+              style={{
+                position: "absolute",
+                left: "280px",
+                top: -40,
+                bottom: 100,
+                width: "1px",
+                background: "rgba(0,0,0,0.12)",
+                zIndex: 0,
+              }}
+            />
+
+            {/* LEFT — Badge */}
+            <motion.div
+              className="ss-header-left"
+              initial={{ opacity: 0, x: -20 }}
+              animate={headerView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              style={{
+                width: "280px",
+                flexShrink: 0,
+                top: -40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "40px 20px",
+                position: "relative",
+                zIndex: 1,
               }}
             >
-              Experience{" "}
-              <span style={{ color: "#5f9bf5" }}>The Purity Of</span>
-              <br />
-              Salem Sago
-            </motion.h2>
-          </div>
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#fff",
+                border: "1.5px solid #1a1a1a",
+                borderRadius: "999px",
+                padding: "8px 20px",
+              }}>
+                <span style={{
+                  width: "8px", height: "8px", borderRadius: "50%",
+                  background: "#5f9bf5", display: "block", flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: "12px", fontWeight: 600,
+                  letterSpacing: "0.14em", color: "#1a1a1a",
+                  textTransform: "uppercase",
+                }}>WHAT WE DO</span>
+              </div>
+            </motion.div>
 
-          {/* Sub copy + gold dot */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={headerView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            style={{ maxWidth: "680px", position: "relative" }}
-          >
-            <p style={{
-              fontSize: "15px",
-              fontWeight: 400,
-              lineHeight: 1.75,
-              color: "#666",
+            {/* RIGHT — Heading + Description */}
+            <div className="ss-header-right" style={{
+              flex: 1,
+              padding: "40px 0 40px 48px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              position: "relative",
+              zIndex: 1,
             }}>
-              SAGOSERVE has been strengthening the tapioca sago and starch industry
-              through cooperation, quality assurance, and transparent trade practices
-              for over five decades.
-            </p>
-            
-          </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={headerView ? { opacity: 1, y: 0 } : {}}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ marginBottom: "30px" }}
+              >
+                <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: "800", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#111827", margin: "0 0 1px", lineHeight: 1.15, letterSpacing: "-0.4px" }}>
+                  Experience
+                </h2>
+                <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: "800", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#5f9bf5", margin: "0 0 14px", lineHeight: 1.15, letterSpacing: "-0.4px" }}>
+                  The Purity Of Salem Sago
+                </h2>
+                <p style={{ fontSize: "13.5px", color: "#555f6e", lineHeight: 1.75, maxWidth: "580px", margin: 0, fontFamily: "'DM Sans',sans-serif" }}>
+                  SAGOSERVE has been strengthening the tapioca sago and starch industry through cooperation, quality assurance, and transparent trade practices for over five decades.
+                </p>
+              </motion.div>
+            </div>
+          </div>
         </div>
 
         {/* ══════════════════════════

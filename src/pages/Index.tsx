@@ -5,6 +5,7 @@ import AboutScrollSection from "../components/AboutScrollSection";
 import QualityPage from "../components/QualityPage";
 import UniqueIdeasHoverSection from "@/components/UniqueIdeasHoverSection";
 import TapiocaBenefitsPage from "@/components/TapiocaBenefitsPage";
+import IndustrialUses from "@/components/IndustrialUses";
 import TapiocaRecipesPage from "@/components/TapiocaRecipesPage";
 import HeroUltra from "@/components/HeroUltra";
 import ExcellenceSection from "@/components/ExcellenceSection";
@@ -36,7 +37,9 @@ const Index = () => {
        <AchievementsSection />
        <TapiocaRecipesPage />
        <TapiocaBenefitsPage />
+       <IndustrialUses />
       <Gallery />
+      <TestimonialsSection />
       <Blog />
        {/* <QualityPage /> */}
       {/* <ExcellenceSection /> */}

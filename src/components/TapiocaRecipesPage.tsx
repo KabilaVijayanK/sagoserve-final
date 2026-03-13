@@ -35,20 +35,13 @@ const recipes = [
   },
   {
     id: 1,
-    num: "01",
-    title: "Sago Ladoo",
+    num: "05",
+    title: "Sago Pakoda",
     image: "Photos/Sago Food Photos/C9R_7021.JPG",
     content:
       "A traditional sweet dessert made with tapioca pearls, milk, jaggery and dry fruits.",
   },
-  {
-    id: 1,
-    num: "01",
-    title: "Sago Falooda",
-    image: "Photos/Sago Food Photos/C9R_6997.JPG",
-    content:
-      "A traditional sweet dessert made with tapioca pearls, milk, jaggery and dry fruits.",
-  },
+ 
 ];
 
 const ACCENT = "#5f9bf5";
@@ -85,10 +78,56 @@ export default function TapiocaRecipesPage() {
           padding: 0 40px;
         }
 
-        /* HEADER */
+        /* HEADER — two-column layout with intersecting divider lines */
         .recipes-header {
-          text-align: center;
+          text-align: left;
           margin-bottom: 64px;
+          
+          display: flex;
+          align-items: stretch;
+          min-height: 160px;
+          position: relative;
+        }
+          /* Horizontal half-line — centered at 280px */
+        .recipes-header::before {
+          content: '';
+          position: absolute;
+          top: 10%;
+          left: 180px;
+          width: 280px;
+          height: 1px;
+          background: rgba(0,0,0,0.15);
+          z-index: 0;
+        }
+        /* Vertical divider line using ::after pseudo-element */
+        .recipes-header::after {
+          content: '';
+          position: absolute;
+          left: 280px;
+          top: -40px;
+          bottom: 0;
+          width: 1px;
+          background: rgba(0,0,0,0.15);
+          z-index: 0;
+        }
+        .recipes-header-left {
+          width: 280px;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 20px;
+          position: relative;
+          z-index: 1;
+        }
+        .recipes-header-right {
+          flex: 1;
+          padding: 40px 0 40px 48px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          position: relative;
+          z-index: 1;
         }
         .recipes-eyebrow {
           font-size: 11px;
@@ -99,42 +138,45 @@ export default function TapiocaRecipesPage() {
           font-weight: 500;
         }
         .recipes-title {
-          font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(36px, 5vw, 60px);
-          font-weight: 700;
+          font-family: 'Inter', sans-serif;
+          font-size: clamp(32px, 4vw, 52px);
+          font-weight: 900;
           color: #1a1a1a;
-          line-height: 1.1;
+          line-height: 1.15;
           margin-bottom: 16px;
+          letter-spacing: -0.03em;
+          max-width: 700px;
         }
         .recipes-title .accent { color: ${ACCENT}; }
         .recipes-subtitle {
           font-size: 15px;
-          color: #777;
-          line-height: 1.7;
-          max-width: 500px;
-          margin: 0 auto;
-          font-weight: 300;
+          color: #666;
+          line-height: 1.75;
+          max-width: 680px;
+          margin: 0;
+          font-weight: 400;
         }
 
         /* SECTION BADGE */
         .section-badge {
           display: inline-flex;
           align-items: center;
-          gap: 7px;
+          gap: 8px;
+          background: #fff;
           border: 1.5px solid #1a1a1a;
           border-radius: 100px;
-          padding: 7px 16px;
-          font-size: 11px;
+          padding: 4px 20px;
+          font-size: 12px;
           font-weight: 600;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: #1a1a1a;
-          margin-bottom: 16px;
         }
         .badge-dot {
-          width: 6px; height: 6px;
+          width: 8px; height: 8px;
           border-radius: 50%;
           background: ${ACCENT};
+          flex-shrink: 0;
         }
 
         /* MAIN GRID */
@@ -345,7 +387,9 @@ export default function TapiocaRecipesPage() {
           .recipes-main { grid-template-columns: 1fr; gap: 0; }
           .left-panel { position: relative; top: 0; margin-bottom: 36px; }
           .image-card { aspect-ratio: 4/3; border-radius: 16px; }
-          .recipes-header { margin-bottom: 44px; }
+          .recipes-header { margin-bottom: 44px; flex-direction: column; min-height: auto; }
+          .recipes-header-left { width: 100%; border-right: none; border-bottom: 1px solid rgba(0,0,0,0.12); padding: 24px 20px; justify-content: flex-start; }
+          .recipes-header-right { padding: 24px 0 0 0; }
         }
         @media (max-width: 480px) {
           .recipes-title { font-size: 30px; }
@@ -357,18 +401,22 @@ export default function TapiocaRecipesPage() {
       <section className="recipes-wrap" ref={sectionRef}>
         <div className="recipes-container">
 
-          {/* HEADER */}
+          {/* HEADER — two-column layout */}
           <div className={`recipes-header fade-up ${visible ? "visible" : ""}`}>
-            <div className="section-badge">
-              <span className="badge-dot" />
-              Recipes
+            <div className="recipes-header-left">
+              <div className="section-badge">
+                <span className="badge-dot" />
+                Recipes
+              </div>
             </div>
-            <h2 className="recipes-title">
-              Tapioca <span className="accent">Sago</span> Recipes
-            </h2>
-            <p className="recipes-subtitle">
-              Discover traditional and modern recipes made using premium quality tapioca sago.
-            </p>
+            <div className="recipes-header-right">
+              <h2 className="recipes-title">
+                Tapioca <span className="accent">Sago</span> Recipes
+              </h2>
+              <p className="recipes-subtitle">
+                Discover traditional and modern recipes made using premium quality tapioca sago.
+              </p>
+            </div>
           </div>
 
           {/* MAIN GRID */}

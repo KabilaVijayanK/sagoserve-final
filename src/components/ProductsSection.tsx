@@ -1,563 +1,570 @@
-import { ArrowUpRight } from "lucide-react";
-import { useRef, useState, useEffect, useCallback, } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ShieldCheck, Users, TrendingUp, Award, Sparkles } from "lucide-react";
-/* ─────────────────────────────────────
-   PRODUCTS DATA
-   Replace image paths with your real ones
-───────────────────────────────────── */
-const products = [
-  {
-    title: "Chemical Free Sago",
-    category: "PREMIUM",
-    subcategory: "NATURAL",
-    location: "Salem, India",
-    year: "2024",
-    image: "prd1.jpeg",
-    tall: false,
-  },
-  {
-    title: "Chemical Free Nylon",
-    category: "PREMIUM",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd2.jpg",
-    tall: true,   // ← middle card is taller like image
-  },
-  {
-    title: "Tapioca Sago",
-    category: "STANDARD",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd3.jpg",
-    tall: false,
-  },
-  {
-    title: "Tapioca Nylon",
-    category: "STANDARD",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd2.jpg",
-    tall: true,
-  },
-  {
-    title: "Tapioca Mothithana",
-    category: "EXPORT",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd1.jpeg",
-    tall: false,
-  },
-  {
-    title: "Tapioca Pearl",
-    category: "EXPORT",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd3.jpg",
-    tall: true,
-  },
-  {
-    title: "Tapioca Dryer Starch",
-    category: "INDUSTRIAL",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd2.jpg",
-    tall: false,
-  },
-  {
-    title: "Tapioca Native Starch",
-    category: "INDUSTRIAL",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd1.jpeg",
-    tall: true,
-  },
-  {
-    title: "Tapioca Grinded Starch",
-    category: "INDUSTRIAL",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd3.jpg",
-    tall: false,
-  },
-  {
-    title: "Tapioca Broken",
-    category: "STANDARD",
-    subcategory: null,
-    location: "Salem, India",
-    year: "2024",
-    image: "prd2.jpg",
-    tall: true,
-  },
+import { useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { Shield, Users, TrendingUp, Award, Sparkles } from "lucide-react";
+
+interface Badge {
+  label: string;
+  bg: string;
+  color: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  location: string;
+  year: string;
+  badges: Badge[];
+  image: string;
+  darkBg?: boolean;
+}
+
+interface SlotConfig {
+  scale: number;
+  zIndex: number;
+}
+
+const products: Product[] = [
+  { id: 1,  name: "Chemical Free Sago",    location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }, { label: "NATURAL", bg: "#2e7d32", color: "#fff" }], image: "/prd1.jpeg" },
+  { id: 2,  name: "Chemical Free Nylon",   location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }, { label: "NATURAL", bg: "#2e7d32", color: "#fff" }], image: "/prd2.jpg" },
+  { id: 3,  name: "Tapioca Nylon",   location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }], image: "/prd3.jpg", darkBg: true },
+  { id: 4,  name: "Tapioca Sago",          location: "Salem, India", year: "2024", badges: [{ label: "STANDARD", bg: "#555", color: "#fff" }], image: "/broken-sago.jpg" },
+  { id: 5,  name: "Tapioca Mothithana",            location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }, { label: "NATURAL", bg: "#2e7d32", color: "#fff" }], image: "/prd1.jpeg" },
+  { id: 6,  name: "Tapioca Pearl",             location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }], image: "/prd2.jpg" },
+  { id: 7,  name: "Tapioca Native Starch",       location: "Salem, India", year: "2024", badges: [{ label: "NATURAL", bg: "#2e7d32", color: "#fff" }], image: "/prd1.jpeg" },
+  { id: 8,  name: "Tapioca Grinded Starch",      location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }, { label: "NATURAL", bg: "#2e7d32", color: "#fff" }], image: "/broken-sago.jpg" },
+  { id: 9,  name: "Tapioca Broken",     location: "Salem, India", year: "2024", badges: [{ label: "PREMIUM", bg: "#111", color: "#fff" }], image: "/prd1.jpeg" },
+  { id: 10, name: "Tapioca Dryer  Starch",     location: "Salem, India", year: "2024", badges: [{ label: "STANDARD", bg: "#555", color: "#fff" }], image: "/prd3.jpg" },
 ];
 
-/* ─────────────────────────────────────
-   SINGLE CARD
-───────────────────────────────────── */
-const ProductCard = ({
-  product,
-  index,
-}: {
-  product: typeof products[0];
-  index: number;
-}) => {
-  const ref    = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [hovered, setHovered] = useState(false);
+const TOTAL: number = products.length;
 
-  /* tall cards are ~490px, short ones ~400px — slightly smaller */
-  const photoH = product.tall ? 490 : 400;
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: (index % 3) * 0.12, duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flexShrink: 0,
-        width: "380px",
-        display: "flex",
-        flexDirection: "column",
-        cursor: "pointer",
-        scrollSnapAlign: "start",
-      }}
-    >
-      {/* ── PHOTO AREA ── */}
-      <div
-        style={{
-          width: "100%",
-          height: `${photoH}px`,
-          borderRadius: "18px",
-          overflow: "hidden",
-          position: "relative",
-          background: "#ddd",
-          transition: "box-shadow 0.4s",
-          boxShadow: hovered
-            ? "0 28px 64px rgba(0,0,0,0.18)"
-            : "0 6px 30px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Image */}
-        <motion.img
-          src={product.image}
-          alt={product.title}
-          animate={{ scale: hovered ? 1.07 : 1 }}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-          onError={(e) => {
-            const el = e.currentTarget as HTMLImageElement;
-            el.style.background = "linear-gradient(135deg,#c09040,#3a2200)";
-            el.style.display = "none";
-            const p = el.parentElement!;
-            p.style.background = "linear-gradient(135deg,#c09040 0%,#3a2200 100%)";
-          }}
-        />
-
-        {/* Category pill(s) — top-left inside photo */}
-        <div
-          style={{
-            position: "absolute",
-            top: "16px",
-            left: "16px",
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              backdropFilter: "blur(8px)",
-              borderRadius: "999px",
-              padding: "5px 14px",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "#111",
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              border: "1px solid rgba(0,0,0,0.06)",
-            }}
-          >
-            {product.category}
-          </span>
-          {product.subcategory && (
-            <span
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                backdropFilter: "blur(8px)",
-                borderRadius: "999px",
-                padding: "5px 14px",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#111",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                border: "1px solid rgba(0,0,0,0.06)",
-              }}
-            >
-              {product.subcategory}
-            </span>
-          )}
-        </div>
-
-        {/* Hover: bottom dark gradient + arrow */}
-        <motion.div
-          animate={{ opacity: hovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 50%)",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "flex-end",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "50%",
-              background: "#c08a5b",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: "18px",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-            }}
-          >
-            ↗
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ── TEXT BELOW PHOTO — matches image 2 ── */}
-      <div style={{ padding: "20px 4px 8px" }}>
-        {/* Product name — big bold black */}
-        <motion.h3
-          animate={{ x: hovered ? 4 : 0 }}
-          transition={{ duration: 0.3 }}
-          style={{
-            fontSize: "22px",
-            fontWeight: 800,
-            color: "#111",
-            letterSpacing: "-0.02em",
-            marginBottom: "8px",
-            lineHeight: 1.2,
-          }}
-        >
-          {product.title}
-        </motion.h3>
-
-        {/* Location — grey, small */}
-        <p
-          style={{
-            fontSize: "13.5px",
-            fontWeight: 400,
-            color: "#888",
-            marginBottom: "2px",
-          }}
-        >
-          {product.location}
-        </p>
-
-        {/* Year — grey, small */}
-        <p
-          style={{
-            fontSize: "13.5px",
-            fontWeight: 400,
-            color: "#888",
-          }}
-        >
-          {product.year}
-        </p>
-      </div>
-    </motion.div>
-  );
+const CONFIG: Record<string, SlotConfig> = {
+  "-2": { scale: 0.70, zIndex: 1 },
+  "-1": { scale: 0.85, zIndex: 2 },
+   "0": { scale: 1.00, zIndex: 3 },
+   "1": { scale: 0.85, zIndex: 2 },
+   "2": { scale: 0.70, zIndex: 1 },
 };
 
-/* ─────────────────────────────────────
-   MAIN SECTION
-───────────────────────────────────── */
-const ProductsSection = () => {
-  const headerRef  = useRef<HTMLDivElement>(null);
-  const headerView = useInView(headerRef, { once: true, margin: "-60px" });
-  const scrollRef  = useRef<HTMLDivElement>(null);
+export default function ProductCarousel(): JSX.Element {
+  const [centerIdx, setCenterIdx] = useState<number>(0);
+  const [locked, setLocked] = useState<boolean>(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const headerView = useInView(headerRef, { once: true });
 
-  const [activeSlide, setActiveSlide] = useState(0);
-  const totalSlides = Math.ceil(products.length / 3);
+  function slide(dir: number): void {
+    if (locked) return;
+    setLocked(true);
+    setCenterIdx((c) => (c + dir + TOTAL) % TOTAL);
+    setTimeout(() => setLocked(false), 380);
+  }
 
-  /* track scroll position to update dot */
-  const onScroll = useCallback(() => {
-    const c = scrollRef.current;
-    if (!c) return;
-    const cardW = 440; // card + gap
-    const slide = Math.round(c.scrollLeft / (cardW * 3));
-    setActiveSlide(Math.min(slide, totalSlides - 1));
-  }, [totalSlides]);
-
-  useEffect(() => {
-    const c = scrollRef.current;
-    if (!c) return;
-    c.addEventListener("scroll", onScroll, { passive: true });
-    return () => c.removeEventListener("scroll", onScroll);
-  }, [onScroll]);
-
-  const scrollToSlide = (i: number) => {
-    const c = scrollRef.current;
-    if (!c) return;
-    c.scrollTo({ left: i * 440 * 3, behavior: "smooth" });
-  };
+  const visibleCards = [-2, -1, 0, 1, 2].map((offset) => ({
+    product: products[(centerIdx + offset + TOTAL) % TOTAL],
+    offset,
+  }));
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        .ps, .ps * { font-family: 'Inter', sans-serif !important; box-sizing: border-box; }
-        .ps a { text-decoration: none; }
-        .no-sb::-webkit-scrollbar { display: none; }
-        .no-sb { -ms-overflow-style: none; scrollbar-width: none; }
-        .exp-btn:hover { background: #111 !important; }
+       @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .root {
+          background: #eeebe3;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 56px 0 48px;
+          font-family: 'Inter', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+          .root {
+            padding: 40px 0 40px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .root {
+            padding: 32px 0 32px;
+          }
+        }
+
+        .subtitle {
+          font-size: 12.5px;
+          color: #888;
+          text-align: center;
+          max-width: 400px;
+          line-height: 1.8;
+          margin: 0 auto 40px;
+          padding: 0 20px;
+        }
+
+        .header-container {
+          width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+          .header-container {
+            padding: 0 40px !important;
+            margin-bottom: 32px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .header-container {
+            padding: 0 20px !important;
+            margin-bottom: 24px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .header-container {
+            padding: 0 16px !important;
+            margin-bottom: 20px !important;
+          }
+        }
+
+        .stage {
+          width: 100%;
+          max-width: 1480px;
+          padding: 0 40px;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 520px;
+          margin: 0 auto;
+          gap: 12px;
+        }
+
+        @media (max-width: 1024px) {
+          .stage {
+            height: 480px;
+            padding: 0 30px;
+            max-width: 1100px;
+            gap: 10px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .stage {
+            height: 420px;
+            padding: 0 20px;
+            max-width: 100%;
+            gap: 8px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .stage {
+            height: 360px;
+            padding: 0 16px;
+            gap: 6px;
+          }
+        }
+
+        .slot {
+          flex: 1;
+          min-width: 140px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: center;
+          transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+        }
+
+        @media (max-width: 1024px) {
+          .slot {
+            min-width: 120px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .slot {
+            min-width: 100px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .slot {
+            min-width: 70px;
+          }
+        }
+
+        .img-box {
+          width: 100%;
+          border-radius: 16px;
+          overflow: hidden;
+          position: relative;
+          background: #c8c4ba;
+        }
+
+        .img-box.dark-bg {
+          background: #1a1a1a;
+        }
+
+        .img-box img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        @media (max-width: 768px) {
+          .img-box {
+            border-radius: 12px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .img-box {
+            border-radius: 10px;
+          }
+        }
+
+        .badges {
+          position: absolute;
+          top: 9px;
+          left: 9px;
+          display: flex;
+          gap: 4px;
+          z-index: 2;
+        }
+
+        .badge {
+          font-size: 8px;
+          font-weight: 600;
+          letter-spacing: 0.07em;
+          padding: 2.5px 8px;
+          border-radius: 20px;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+          .badges {
+            top: 6px;
+            left: 6px;
+            gap: 3px;
+          }
+          .badge {
+            font-size: 7px;
+            padding: 2px 6px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .badges {
+            top: 4px;
+            left: 4px;
+          }
+          .badge {
+            font-size: 6px;
+            padding: 1.5px 5px;
+          }
+        }
+
+        .btn {
+          position: absolute;
+          bottom: 50%;
+          transform: translateY(50%);
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: #fff;
+          border: 1px solid #ddd;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.09);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          transition: background 0.15s, border-color 0.15s;
+          padding: 0;
+        }
+
+        .btn:hover { background: #111; border-color: #111; }
+        .btn:hover .chev { stroke: #fff; }
+        .btn-l { left: 0; }
+        .btn-r { right: 0; }
+
+        @media (max-width: 1024px) {
+          .btn {
+            width: 32px;
+            height: 32px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .btn {
+            width: 30px;
+            height: 30px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .btn {
+            width: 26px;
+            height: 26px;
+          }
+        }
+        .chev { stroke: #333; fill: none; transition: stroke 0.15s; }
+
+        /* Header responsive styles */
+        @media (max-width: 1024px) {
+          .ps-header-cols {
+            min-height: 120px !important;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .ps-header-cols {
+            min-height: 100px !important;
+            flex-direction: column;
+          }
+          .ps-header-left {
+            width: 100% !important;
+            padding: 20px !important;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+          }
+          .ps-header-right {
+            padding: 20px 20px 20px 20px !important;
+          }
+          .ps-header-right > div > h2 {
+            font-size: clamp(20px, 5vw, 32px) !important;
+          }
+          .ps-header-right > div > p {
+            font-size: 12px !important;
+            line-height: 1.6 !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .ps-header-cols {
+            min-height: 80px !important;
+          }
+          .ps-header-left {
+            padding: 16px !important;
+          }
+          .ps-header-right {\n            padding: 16px !important;\n          }\n          .ps-header-right > div > h2 {\n            font-size: clamp(18px, 5vw, 28px) !important;\n            margin-bottom: 8px !important;\n          }\n          .ps-header-right > div > p {\n            font-size: 11px !important;\n          }\n        }
+
       `}</style>
 
-      <section
-        className="ps"
-        style={{
-          width: "100%",
-          background: "#F5F4F1",
-          padding: "40px 0 50px",
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-
-        {/* ── FAINT ARCHITECTURAL WATERMARK ── */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: "30px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "800px",
-            height: "420px",
-            opacity: 0.055,
-            pointerEvents: "none",
-            zIndex: 0,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='800' height='420' viewBox='0 0 800 420' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M400 10 L400 410 M50 410 L400 10 L750 410 M50 410 L750 410 M120 260 L680 260 M200 410 L400 10 L600 410 M400 10 L800 280 M400 10 L0 280' stroke='%23000' stroke-width='1.2' fill='none'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "center",
-          }}
-        />
-
-        {/* ══ HEADER ══ */}
+      <div className="root">
+         {/* ══ HEADER ══ */}
         <div
           ref={headerRef}
           style={{
             maxWidth: "1320px",
             margin: "0 auto",
             padding: "0 60px",
-            marginBottom: "64px",
+            marginBottom: "40px",
             position: "relative",
             zIndex: 1,
           }}
+          className="header-container"
         >
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={headerView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5 }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "7px",
-              background: "#fff",
-              border: "1px solid rgba(0,0,0,0.10)",
-              borderRadius: "999px",
-              padding: "6px 14px 6px 10px",
-              marginBottom: "28px",
-            }}
-          >
-            <span style={{
-              width: "7px", height: "7px", borderRadius: "50%",
-              background: "#5f9bf5", display: "block",
-            }} />
-            <span style={{
-              fontSize: "11px", fontWeight: 600,
-              letterSpacing: "0.18em", color: "#555",
-              textTransform: "uppercase",
-            }}>
-              OUR PRODUCTS
-            </span>
-          </motion.div>
-
-          {/* Headline — black "Our" + gold "Products That" / gold "Define" + black "Our Range" */}
-          <div style={{ overflow: "hidden", marginBottom: "20px" }}>
-            {[
-              { parts: [{ t: "Our ", gold: false }, { t: "Products That", gold: true }] },
-              { parts: [{ t: "Define ", gold: true }, { t: "Our Range", gold: false }] },
-            ].map((line, li) => (
-              <div key={li} style={{ overflow: "hidden" }}>
-                <motion.div
-                  initial={{ y: "110%", opacity: 0 }}
-                  animate={headerView ? { y: "0%", opacity: 1 } : {}}
-                  transition={{ delay: 0.12 + li * 0.10, duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <h2 style={{
-                    fontSize: "clamp(40px, 5.5vw, 74px)",
-                    fontWeight: 900,
-                    lineHeight: 1.08,
-                    letterSpacing: "-0.03em",
-                    margin: 0,
-                    textAlign: "center",
-                  }}>
-                    {line.parts.map((p, pi) => (
-                      <span key={pi} style={{ color: p.gold ? "#5f9bf5" : "#111" }}>{p.t}</span>
-                    ))}
-                  </h2>
-                </motion.div>
-              </div>
-            ))}
-          </div>
-
-          {/* Sub copy */}
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={headerView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.35, duration: 0.6 }}
-            style={{
-              fontSize: "15px",
-              fontWeight: 400,
-              lineHeight: 1.72,
-              color: "#666",
-              maxWidth: "620px",
-              textAlign: "center",
-              margin: "0 auto",
-            }}
-          >
-           Our product range includes GI-tagged Salem Sago (Javvarisi) and tapioca starch, carefully processed to ensure purity, consistency, and reliability for food, industrial, and export applications.
-          </motion.p>
-        </div>
-
-        {/* ══ SCROLL TRACK ══ */}
-        <div
-          style={{
-            maxWidth: "1320px",
-            margin: "0 auto",
-            padding: "0 60px",
+          {/* Two-column header layout */}
+          <div className="ps-header-cols" style={{
+            display: "flex",
+            alignItems: "stretch",
+            minHeight: "130px",
             position: "relative",
-            zIndex: 2,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          {/* Cards row — 3 visible, staggered heights */}
-          <div
-            ref={scrollRef}
-            className="no-sb"
-            style={{
+          }}>
+            {/* Horizontal divider line — across full width at top */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                
+                left: "10%",
+                right: 0,
+                 width: "400px",
+                height: "1px",
+                background: "rgba(0,0,0,0.15)",
+                zIndex: 0,
+              }}
+            />
+
+            {/* Vertical divider line — at 280px boundary */}
+            <div
+              style={{
+                position: "absolute",
+                left: "280px",
+                top: -40,
+                bottom: 0,
+                width: "1px",
+                background: "rgba(0,0,0,0.15)",
+                zIndex: 0,
+              }}
+            />
+
+            {/* LEFT — Badge */}
+            <motion.div
+              className="ps-header-left"
+              initial={{ opacity: 0, x: -20 }}
+              animate={headerView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              style={{
+                width: "280px",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "30px 20px",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              <div style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#fff",
+                border: "1.5px solid #1a1a1a",
+                borderRadius: "999px",
+                padding: "8px 20px",
+              }}>
+                <span style={{
+                  width: "8px", height: "8px", borderRadius: "50%",
+                  background: "#5f9bf5", display: "block", flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: "12px", fontWeight: 600,
+                  letterSpacing: "0.14em", color: "#1a1a1a",
+                  textTransform: "uppercase",
+                }}>OUR PRODUCTS</span>
+              </div>
+            </motion.div>
+
+            {/* RIGHT — Heading + Description */}
+            <div className="ps-header-right" style={{
+              flex: 1,
+              padding: "30px 0 30px 48px",
               display: "flex",
-              gap: "20px",
-              overflowX: "scroll",
-              alignItems: "center",   /* center-aligned »»» */
-              paddingBottom: "16px",
-              cursor: "grab",
-              justifyContent: "flex-start",
-              paddingLeft: "0px",
-              paddingRight: "0px",
-              scrollSnapType: "x mandatory",
-            }}
-            onMouseDown={(e) => {
-              const el = scrollRef.current!;
-              const startX = e.pageX;
-              const sl     = el.scrollLeft;
-              el.style.cursor = "grabbing";
-              const move = (me: MouseEvent) => { el.scrollLeft = sl - (me.pageX - startX); };
-              const up   = () => { el.style.cursor = "grab"; window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
-              window.addEventListener("mousemove", move);
-              window.addEventListener("mouseup", up);
-            }}
-          >
-            {products.map((product, i) => (
-              <ProductCard key={i} product={product} index={i} />
-            ))}
+              flexDirection: "column",
+              justifyContent: "center",
+              position: "relative",
+              zIndex: 1,
+            }}>
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={headerView ? { opacity: 1, y: 0 } : {}}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                style={{ marginBottom: "30px" }}
+              >
+                <h2 style={{ fontSize: "clamp(28px,4.5vw,48px)", fontWeight: "900", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#111827", margin: "0 0 2px", lineHeight: 1.1, letterSpacing: "-0.6px" }}>
+                  Our Products That
+                </h2>
+                <h2 style={{ fontSize: "clamp(28px,4.5vw,48px)", fontWeight: "900", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#5f9bf5", margin: "0 0 16px", lineHeight: 1.1, letterSpacing: "-0.6px" }}>
+                  Define Our Range
+                </h2>
+                <p style={{ fontSize: "13.5px", color: "#555f6e", lineHeight: 1.75, maxWidth: "580px", margin: 0, fontFamily: "'DM Sans',sans-serif" }}>
+                 Our product range includes GI-tagged Salem Sago (Javvarisi) and tapioca starch, carefully processed to ensure purity, consistency, and reliability for food, industrial, and export applications.
+                </p>
+              </motion.div>
+            </div>
           </div>
         </div>
+        <div className="stage">
+          <button className="btn btn-l" onClick={() => slide(-1)} aria-label="Previous">
+            <svg width="13" height="13" viewBox="0 0 13 13">
+              <polyline className="chev" points="8.5,1.5 3.5,6.5 8.5,11.5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
 
-        {/* ══ GOLD DOT PAGINATION + CTA ══ */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }} // moved up from y: 28
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          viewport={{ once: true }}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "36px",
-            marginTop: "30px", // reduced from 60px
-            padding: "0 60px",
-            maxWidth: "1320px",
-            margin: "30px auto 0", // reduced from 60px auto 0
-          }}
-        >
-          {/* Dot row — single amber dot like image */}
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            {Array.from({ length: totalSlides }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => scrollToSlide(i)}
+          <button className="btn btn-r" onClick={() => slide(1)} aria-label="Next">
+            <svg width="13" height="13" viewBox="0 0 13 13">
+              <polyline className="chev" points="4.5,1.5 9.5,6.5 4.5,11.5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {visibleCards.map(({ product: p, offset }) => {
+            const cfg = CONFIG[String(offset)];
+            const isCenter = offset === 0;
+            const isOuter = Math.abs(offset) === 2;
+            // Increased image height per position for bigger cards — responsive scaling
+            let imgHeight = isCenter ? 420 : Math.abs(offset) === 1 ? 310 : 360;
+            if (window.innerWidth <= 1024) imgHeight = isCenter ? 390 : Math.abs(offset) === 1 ? 290 : 340;
+            if (window.innerWidth <= 768) imgHeight = isCenter ? 340 : Math.abs(offset) === 1 ? 260 : 300;
+            if (window.innerWidth <= 480) imgHeight = isCenter ? 280 : Math.abs(offset) === 1 ? 220 : 250;
+            // Reserve fixed info height so all cards' image midpoints align — responsive
+            const INFO_H = window.innerWidth <= 480 ? 48 : 58; // name + location + year
+
+            return (
+              <div
+                key={`${p.id}-${offset}`}
+                className="slot"
                 style={{
-                  width: i === activeSlide ? "28px" : "10px",
-                  height: "10px",
-                  borderRadius: "999px",
-                  background: i === activeSlide ? "#5f9bf5" : "rgba(0,0,0,0.18)",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  transition: "all 0.35s ease",
+                  zIndex: cfg.zIndex,
+                  transform: `scale(${cfg.scale})`,
+                  transformOrigin: "center center",
+                  // Total card height is always imgHeight + INFO_H, centered in slot
+                  height: imgHeight + INFO_H,
+                  flex: isCenter ? 1.35 : 1,
                 }}
-              />
-            ))}
-          </div>
+              >
+                {/* Image — takes exact imgHeight */}
+                <div
+                  className={`img-box${isCenter && p.darkBg ? " dark-bg" : ""}`}
+                  style={{ height: imgHeight, borderRadius: 14, overflow: "hidden", flexShrink: 0 }}
+                >
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <div className="badges">
+                    {p.badges.map((b) => (
+                      <span key={b.label} className="badge" style={{ background: b.bg, color: b.color }}>
+                        {b.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Info — always reserves INFO_H even when hidden, keeping midpoint consistent */}
+                <div style={{ height: INFO_H, padding: window.innerWidth <= 480 ? "6px 4px 0" : "10px 4px 0", visibility: isOuter ? "hidden" : "visible" }}>
+                  <div style={{ fontSize: window.innerWidth <= 480 ? 11 : isCenter ? 14 : 12.5, fontWeight: 600, color: "#111", marginBottom: 2, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                  <div style={{ fontSize: window.innerWidth <= 480 ? 9 : 11, color: "#999", lineHeight: 1.4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.location}</div>
+                  <div style={{ fontSize: window.innerWidth <= 480 ? 9 : 11, color: "#999", whiteSpace: "nowrap" }}>{p.year}</div>
+                </div>
+              </div>
+            );
+          })}
 
           {/* Lines + button */}
           <div
             style={{
+              position: "absolute",
+              bottom: "-80px",
+              left: 0,
+              right: 0,
               display: "flex",
               alignItems: "center",
               gap: "32px",
               width: "100%",
-              maxWidth: "900px",
+              justifyContent: "center",
+              padding: "0 20px",
             }}
           >
             <div style={{
               flex: 1,
               height: "1px",
               background: "linear-gradient(to right, transparent, #111 80%)",
+              maxWidth: "300px",
             }} />
-            <Link
-              to="/products"
-              className="exp-btn"
+            <button
+              onClick={() => window.location.href = "/products"}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -568,46 +575,91 @@ const ProductsSection = () => {
                 fontWeight: 700,
                 padding: "14px 30px",
                 borderRadius: "999px",
+                border: "none",
+                cursor: "pointer",
                 transition: "background 0.25s",
                 whiteSpace: "nowrap",
                 letterSpacing: "0.01em",
                 boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#333")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "#1a1a1a")}
             >
               Explore Products
-              <ArrowUpRight size={17} />
-            </Link>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
             <div style={{
               flex: 1,
               height: "1px",
               background: "linear-gradient(to left, transparent, #111 80%)",
+              maxWidth: "300px",
             }} />
           </div>
-        </motion.div>
- {/* 🔥 PREMIUM VALUE STRIP WITH ICONS */}
-        <div className="mt-16 relative overflow-hidden">
+        </div>
 
-          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+        {/* 🔥 SCROLLING VALUE STRIP WITH ICONS */}
+        <div style={{
+          marginTop: "100px",
+          position: "relative",
+          overflow: "hidden",
+         
+        }}>
+          {/* Gradient overlays */}
+          <div style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: "80px",
+            background: "linear-gradient(to right, #fff, transparent)",
+            zIndex: 10,
+            pointerEvents: "none",
+          }} />
+          <div style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: "80px",
+            background: "linear-gradient(to left, #fff, transparent)",
+            zIndex: 10,
+            pointerEvents: "none",
+          }} />
 
           <motion.div
-            className="flex gap-16 items-center whitespace-nowrap"
-            animate={{ x: ["0%", "-50%"] }}
+            style={{
+              display: "flex",
+              gap: "64px",
+              alignItems: "center",
+              whiteSpace: "nowrap",
+              width: "max-content",
+            }}
+            animate={{ x: ["0", "-33.33%"] }}
             transition={{
               repeat: Infinity,
-              duration: 28,
+              duration: 25,
               ease: "linear",
+              repeatType: "loop",
             }}
           >
             {[
-              { text: "Quality and Fair Pricing", icon: ShieldCheck },
+              { text: "Quality and Fair Pricing", icon: Shield },
               { text: "Cooperative Strength", icon: Users },
               { text: "Sustainable Growth", icon: TrendingUp },
               { text: "Trusted Quality", icon: Award },
               { text: "Collective Progress", icon: Sparkles },
             ]
               .concat([
-                { text: "Quality and Fair Pricing", icon: ShieldCheck },
+                { text: "Quality and Fair Pricing", icon: Shield },
+                { text: "Cooperative Strength", icon: Users },
+                { text: "Sustainable Growth", icon: TrendingUp },
+                { text: "Trusted Quality", icon: Award },
+                { text: "Collective Progress", icon: Sparkles },
+              ])
+              .concat([
+                { text: "Quality and Fair Pricing", icon: Shield },
                 { text: "Cooperative Strength", icon: Users },
                 { text: "Sustainable Growth", icon: TrendingUp },
                 { text: "Trusted Quality", icon: Award },
@@ -618,27 +670,24 @@ const ProductsSection = () => {
                 return (
                   <div
                     key={i}
-                    className="
-                      flex items-center gap-3
-                      text-gray-900
-                      text-lg
-                      font-medium
-                      hover:text-black
-                      transition
-                    "
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      color: "#111",
+                      fontSize: "16px",
+                      fontWeight: 500,
+                      flexShrink: 0,
+                    }}
                   >
-                    <Icon className="w-5 h-5 text-blue-600" />
-                    {item.text}
+                    <Icon size={20} style={{ color: "#1a4fd6", flexShrink: 0 }} />
+                    <span>{item.text}</span>
                   </div>
                 );
               })}
           </motion.div>
-
         </div>
-
-      </section>
+      </div>
     </>
   );
-};
-
-export default ProductsSection;
+}

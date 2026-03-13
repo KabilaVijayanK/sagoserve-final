@@ -1,313 +1,195 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useTransform,
+  useSpring,
+  useInView,
+} from "framer-motion";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface GalleryItem {
-  id: number;
-  src: string;
-  label: string;
-}
+interface GalleryItem { id: number; src: string; label: string; }
+interface CardConfig   { item: GalleryItem; w: number; h: number; rounded: boolean; }
 
-interface CardConfig {
-  item: GalleryItem;
-  w: number;
-  rounded: boolean;
-}
-
-// ── Your public folder images ─────────────────────────────────────────────────
+// ── Images ────────────────────────────────────────────────────────────────────
 const galleryItems: GalleryItem[] = [
-  { id: 1,  src: "/Photos/Sago Food Photos/JULY/1.JPG",      label: "Image 1"  },
-  { id: 2,  src: "/Photos/Image 2.JPG",                       label: "Image 2"  },
-  { id: 3,  src: "/Photos/Image 1.png",                       label: "Image 3"  },
-  { id: 4,  src: "/Photos/Sago Food Photos/JULY/2.JPG",      label: "Image 4"  },
-  { id: 5,  src: "/Photos/Sago Food Photos/JULY/3.JPG",      label: "Image 5"  },
-  { id: 6,  src: "/Photos/Sago Food Photos/JULY/4.JPG",      label: "Image 6"  },
-  { id: 7,  src: "/Photos/Sago Food Photos/AUG/5.JPG",       label: "Image 7"  },
-  { id: 8,  src: "/Photos/Sago Food Photos/AUG/6.JPG",       label: "Image 8"  },
-  { id: 9,  src: "/Photos/Sago Food Photos/AUG/7.JPG",       label: "Image 9"  },
-  { id: 10, src: "/Photos/Sago Food Photos/AUG/8.JPG",       label: "Image 10" },
-  { id: 11, src: "/Photos/Sago Food Photos/C9R_7157.JPG",    label: "Image 11" },
+  { id: 1,  src: "/Photos/Sago Food Photos/JULY/1.JPG",   label: "Image 1"  },
+  { id: 2,  src: "/Photos/Image 2.JPG",                   label: "Image 2"  },
+  { id: 3,  src: "/Photos/Image 1.png",                   label: "Image 3"  },
+  { id: 4,  src: "/Photos/Sago Food Photos/JULY/2.JPG",   label: "Image 4"  },
+  { id: 5,  src: "/Photos/Sago Food Photos/JULY/3.JPG",   label: "Image 5"  },
+  { id: 6,  src: "/Photos/Sago Food Photos/JULY/4.JPG",   label: "Image 6"  },
+  { id: 7,  src: "/Photos/Sago Food Photos/AUG/5.JPG",    label: "Image 7"  },
+  { id: 8,  src: "/Photos/Sago Food Photos/AUG/6.JPG",    label: "Image 8"  },
+  { id: 9,  src: "/Photos/Sago Food Photos/AUG/7.JPG",    label: "Image 9"  },
+  { id: 10, src: "/Photos/Sago Food Photos/AUG/8.JPG",    label: "Image 10" },
+  { id: 11, src: "/Photos/Sago Food Photos/C9R_7157.JPG", label: "Image 11" },
 ];
 
-// ── Row configs ───────────────────────────────────────────────────────────────
 const row1Config: CardConfig[] = [
-  { item: galleryItems[0], w: 220, rounded: false },
-  { item: galleryItems[1], w: 265, rounded: true  },
-  { item: galleryItems[2], w: 305, rounded: false },
-  { item: galleryItems[3], w: 242, rounded: true  },
-  { item: galleryItems[4], w: 285, rounded: false },
-  { item: galleryItems[5], w: 250, rounded: true  },
-  { item: galleryItems[6], w: 325, rounded: false },
+  { item: galleryItems[0], w: 195, h: 370, rounded: false },
+  { item: galleryItems[1], w: 270, h: 325, rounded: true  },
+  { item: galleryItems[2], w: 430, h: 385, rounded: false },
+  { item: galleryItems[3], w: 245, h: 330, rounded: true  },
+  { item: galleryItems[4], w: 400, h: 380, rounded: false },
+  { item: galleryItems[5], w: 255, h: 335, rounded: true  },
+  { item: galleryItems[6], w: 345, h: 372, rounded: false },
 ];
 
 const row2Config: CardConfig[] = [
-  { item: galleryItems[7],  w: 285, rounded: true  },
-  { item: galleryItems[8],  w: 245, rounded: false },
-  { item: galleryItems[9],  w: 305, rounded: true  },
-  { item: galleryItems[10], w: 265, rounded: false },
+  { item: galleryItems[7],  w: 285, h: 355, rounded: true  },
+  { item: galleryItems[8],  w: 558, h: 370, rounded: false },
+  { item: galleryItems[9],  w: 300, h: 350, rounded: false },
+  { item: galleryItems[10], w: 510, h: 365, rounded: true  },
 ];
 
-// ── Custom Cursor ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CURSOR — pure DOM + RAF, zero React re-renders
+// ─────────────────────────────────────────────────────────────────────────────
 const GalleryCursor = ({ isView }: { isView: boolean }) => {
   const dotRef  = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const mouse   = useRef({ x: 0, y: 0 });
-  const ring    = useRef({ x: 0, y: 0 });
-  const raf     = useRef<number>(0);
+  const pos     = useRef({ mx: -300, my: -300, rx: -300, ry: -300 });
+  const rafId   = useRef(0);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      mouse.current = { x: e.clientX, y: e.clientY };
-      if (dotRef.current) {
-        dotRef.current.style.left = e.clientX + "px";
-        dotRef.current.style.top  = e.clientY + "px";
-      }
+      pos.current.mx = e.clientX;
+      pos.current.my = e.clientY;
+      if (dotRef.current)
+        dotRef.current.style.transform = `translate3d(${e.clientX - 3}px,${e.clientY - 3}px,0)`;
     };
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove, { passive: true });
 
-    const loop = () => {
-      ring.current.x += (mouse.current.x - ring.current.x) * 0.1;
-      ring.current.y += (mouse.current.y - ring.current.y) * 0.1;
+    const tick = () => {
+      const p = pos.current;
+      p.rx += (p.mx - p.rx) * 0.12;
+      p.ry += (p.my - p.ry) * 0.12;
       if (ringRef.current) {
-        ringRef.current.style.left = ring.current.x + "px";
-        ringRef.current.style.top  = ring.current.y + "px";
+        const half = isView ? 43 : 17;
+        ringRef.current.style.transform = `translate3d(${p.rx - half}px,${p.ry - half}px,0)`;
       }
-      raf.current = requestAnimationFrame(loop);
+      rafId.current = requestAnimationFrame(tick);
     };
-    raf.current = requestAnimationFrame(loop);
-
+    rafId.current = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(raf.current);
+      cancelAnimationFrame(rafId.current);
     };
-  }, []);
+  }, [isView]);
 
   return (
     <>
-      <div
-        ref={dotRef}
-        style={{
-          position: "fixed",
-          width: 7,
-          height: 7,
-          borderRadius: "50%",
-          background: "#c8a96e",
-          transform: "translate(-50%,-50%)",
-          pointerEvents: "none",
-          zIndex: 9999,
-        }}
-      />
-      <div
-        ref={ringRef}
-        style={{
-          position: "fixed",
-          borderRadius: "50%",
-          transform: "translate(-50%,-50%)",
-          pointerEvents: "none",
-          zIndex: 9998,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width:      isView ? 88 : 38,
-          height:     isView ? 88 : 38,
-          background: isView ? "rgba(12,10,8,0.92)" : "transparent",
-          border:     isView ? "none" : "1.5px solid rgba(30,25,20,0.35)",
-          transition: "width 0.4s cubic-bezier(0.22,1,0.36,1), height 0.4s, background 0.4s, border 0.4s",
-        }}
-      >
+      <div ref={dotRef} style={{
+        position:"fixed",top:0,left:0,width:6,height:6,borderRadius:"50%",
+        background:"#c8a96e",pointerEvents:"none",zIndex:9999,willChange:"transform",
+      }}/>
+      <div ref={ringRef} style={{
+        position:"fixed",top:0,left:0,borderRadius:"50%",pointerEvents:"none",
+        zIndex:9998,display:"flex",alignItems:"center",justifyContent:"center",
+        willChange:"transform",
+        width:  isView ? 86 : 34,
+        height: isView ? 86 : 34,
+        background: isView ? "rgba(8,6,4,0.88)" : "transparent",
+        border:     isView ? "none" : "1.5px solid rgba(30,24,18,0.28)",
+        transition: "width .38s cubic-bezier(.22,1,.36,1),height .38s cubic-bezier(.22,1,.36,1),background .38s,border .38s",
+      }}>
         {isView && (
-          <span
-            style={{
-              color: "#fff",
-              fontSize: 10,
-              fontWeight: 500,
-              letterSpacing: "2.5px",
-              textTransform: "uppercase",
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            View
-          </span>
+          <span style={{color:"#fff",fontSize:9.5,fontWeight:500,letterSpacing:"2.8px",
+            textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>View</span>
         )}
       </div>
     </>
   );
 };
 
-// ── Scroll Card ───────────────────────────────────────────────────────────────
-interface ScrollCardProps {
-  item: GalleryItem;
-  rounded?: boolean;
-  onOpen: (idx: number) => void;
-  onHover: (v: boolean) => void;
-  style?: React.CSSProperties;
-  index?: number;
-  sectionRef: React.RefObject<HTMLElement>;
-  direction: "left" | "right";
+// ─────────────────────────────────────────────────────────────────────────────
+// GALLERY CARD
+// ─────────────────────────────────────────────────────────────────────────────
+interface CardProps {
+  item: GalleryItem; w: number; h: number; rounded: boolean;
+  onOpen: (idx: number) => void; onHover: (v: boolean) => void;
 }
-
-const ScrollCard = ({
-  item,
-  rounded = false,
-  onOpen,
-  onHover,
-  style,
-  index = 0,
-  sectionRef,
-  direction,
-}: ScrollCardProps) => {
-  const [hovered, setHovered] = useState(false);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  const baseOffset = direction === "left" ? -700 : 700;
-  const staggerDelay = index * 0.1;
-
-  const x = useTransform(
-    scrollYProgress,
-    [0, 0.18 + staggerDelay * 0.12, 0.65 + staggerDelay * 0.12, 1],
-    [baseOffset, baseOffset * 0.4, 0, direction === "left" ? -80 : 80]
-  );
-  const springX = useSpring(x, { stiffness: 38, damping: 26, mass: 1.3 });
-
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.14 + staggerDelay * 0.08, 0.72 + staggerDelay * 0.08, 1],
-    [0, 1, 1, 0.25]
-  );
-
-  const handle = (v: boolean) => {
-    setHovered(v);
-    onHover(v);
-  };
+const GalleryCard = ({ item, w, h, rounded, onOpen, onHover }: CardProps) => {
+  const [hov, setHov] = useState(false);
+  const set = (v: boolean) => { setHov(v); onHover(v); };
 
   return (
-    <motion.div
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: rounded ? 16 : 5,
-        cursor: "none",
-        flexShrink: 0,
-        boxShadow: hovered
-          ? "0 36px 90px rgba(0,0,0,0.24)"
-          : "0 6px 24px rgba(0,0,0,0.09)",
-        transition: "box-shadow 0.65s cubic-bezier(0.22,1,0.36,1)",
-        ...style,
-        x: springX,
-        opacity,
-      }}
-      onMouseEnter={() => handle(true)}
-      onMouseLeave={() => handle(false)}
+    <div
       onClick={() => onOpen(item.id - 1)}
-      whileHover={{ y: -10 }}
-      whileTap={{ scale: 0.97 }}
+      onMouseEnter={() => set(true)}
+      onMouseLeave={() => set(false)}
+      style={{
+        position:"relative", width:w, height:h,
+        borderRadius: rounded ? 16 : 6,
+        overflow:"hidden", cursor:"none", flexShrink:0,
+        willChange:"transform",
+        transform:  hov ? "translateY(-8px)" : "translateY(0)",
+        boxShadow:  hov ? "0 30px 72px rgba(0,0,0,0.20)" : "0 4px 20px rgba(0,0,0,0.08)",
+        transition: "transform .38s cubic-bezier(.22,1,.36,1),box-shadow .38s ease",
+      }}
     >
-      {/* Image */}
-      <motion.img
-        src={item.src}
-        alt={item.label}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-          willChange: "transform",
-        }}
-        animate={{ scale: hovered ? 1.0 : 1.09 }}
-        transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1] }}
-      />
-
-      {/* Dark gradient overlay */}
-      <motion.div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(180deg, transparent 30%, rgba(0,0,0,0.52) 100%)",
-          zIndex: 1,
-        }}
-        animate={{ opacity: hovered ? 1 : 0 }}
-        transition={{ duration: 0.45 }}
-      />
-
-      {/* Gold bottom accent line */}
-      <motion.div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          background: "linear-gradient(90deg, #c8a96e, #e8d5a8, #c8a96e)",
-          transformOrigin: "left",
-          zIndex: 3,
-        }}
-        animate={{ scaleX: hovered ? 1 : 0 }}
-        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-      />
-
-      {/* Label */}
-      <motion.div
-        style={{ position: "absolute", bottom: 22, left: 22, zIndex: 2 }}
-        animate={{ opacity: hovered ? 1 : 0, y: hovered ? 0 : 16 }}
-        transition={{ duration: 0.42, delay: 0.06 }}
-      >
-        <div
-          style={{ width: 22, height: 1.5, background: "#c8a96e", marginBottom: 9 }}
-        />
-        <span
-          style={{
-            color: "#fff",
-            fontSize: 10,
-            fontWeight: 500,
-            letterSpacing: "2.8px",
-            textTransform: "uppercase",
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          {item.label}
-        </span>
-      </motion.div>
-    </motion.div>
+      <img src={item.src} alt={item.label} loading="lazy" style={{
+        position:"absolute",inset:0,width:"100%",height:"100%",
+        objectFit:"cover",display:"block",willChange:"transform",
+        transform:  hov ? "scale(1.0)" : "scale(1.07)",
+        transition: "transform 1.1s cubic-bezier(.22,1,.36,1)",
+      }}/>
+      <div style={{
+        position:"absolute",inset:0,zIndex:1,
+        background:"linear-gradient(180deg,transparent 30%,rgba(0,0,0,0.52) 100%)",
+        opacity: hov ? 1 : 0, transition:"opacity .40s ease",
+      }}/>
+      <div style={{
+        position:"absolute",bottom:0,left:0,right:0,height:3,zIndex:3,
+        background:"linear-gradient(90deg,#c8a96e,#e8d5a8,#c8a96e)",
+        transformOrigin:"left center",
+        transform:  hov ? "scaleX(1)" : "scaleX(0)",
+        transition: "transform .65s cubic-bezier(.22,1,.36,1)",
+      }}/>
+      <div style={{
+        position:"absolute",bottom:20,left:20,zIndex:2,
+        opacity:   hov ? 1 : 0,
+        transform: hov ? "translateY(0)" : "translateY(12px)",
+        transition:"opacity .36s ease .04s,transform .36s ease .04s",
+      }}>
+        <div style={{width:18,height:1.5,background:"#c8a96e",marginBottom:7}}/>
+        <span style={{color:"#fff",fontSize:9,fontWeight:500,letterSpacing:"3px",
+          textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>{item.label}</span>
+      </div>
+    </div>
   );
 };
 
-// ── Lightbox ──────────────────────────────────────────────────────────────────
-interface LightboxProps {
-  index: number | null;
-  onClose: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-}
-
-const Lightbox = ({ index, onClose, onPrev, onNext }: LightboxProps) => {
+// ─────────────────────────────────────────────────────────────────────────────
+// LIGHTBOX
+// ─────────────────────────────────────────────────────────────────────────────
+const Lightbox = ({ index, onClose, onPrev, onNext }:
+  { index: number|null; onClose:()=>void; onPrev:()=>void; onNext:()=>void }) => {
   const imgRef = useRef<HTMLImageElement>(null);
 
-  const slide = useCallback(
-    (dir: 1 | -1) => {
-      const img = imgRef.current;
-      if (!img) return;
-      img.style.transition = "opacity 0.13s ease, transform 0.13s ease";
-      img.style.opacity = "0";
-      img.style.transform = `scale(0.95) translateX(${dir * -50}px)`;
-      setTimeout(() => {
-        if (dir === 1) onNext();
-        else onPrev();
-        requestAnimationFrame(() => {
-          if (!imgRef.current) return;
-          imgRef.current.style.transition =
-            "opacity 0.44s cubic-bezier(0.22,1,0.36,1), transform 0.52s cubic-bezier(0.22,1,0.36,1)";
-          imgRef.current.style.opacity = "1";
-          imgRef.current.style.transform = "scale(1) translateX(0)";
-        });
-      }, 140);
-    },
-    [onNext, onPrev]
-  );
+  const slide = useCallback((dir: 1|-1) => {
+    const img = imgRef.current; if (!img) return;
+    img.style.transition = "opacity .12s ease,transform .12s ease";
+    img.style.opacity = "0";
+    img.style.transform = `scale(.97) translateX(${dir * -40}px)`;
+    setTimeout(() => {
+      if (dir === 1) {
+        onNext();
+      } else {
+        onPrev();
+      }
+      requestAnimationFrame(() => {
+        if (!imgRef.current) return;
+        imgRef.current.style.transition =
+          "opacity .46s cubic-bezier(.22,1,.36,1),transform .52s cubic-bezier(.22,1,.36,1)";
+        imgRef.current.style.opacity = "1";
+        imgRef.current.style.transform = "scale(1) translateX(0)";
+      });
+    }, 125);
+  }, [onNext, onPrev]);
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -326,147 +208,57 @@ const Lightbox = ({ index, onClose, onPrev, onNext }: LightboxProps) => {
   }, [index]);
 
   if (index === null) return null;
-
-  const item = galleryItems[index];
-  const counter = `${String(index + 1).padStart(2, "0")} / ${String(galleryItems.length).padStart(2, "0")}`;
-
-  const btnStyle: React.CSSProperties = {
-    position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: 52,
-    height: 52,
-    borderRadius: "50%",
-    background: "rgba(255,255,255,0.07)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    backdropFilter: "blur(10px)",
-    color: "#fff",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 10,
-    outline: "none",
+  const item    = galleryItems[index];
+  const counter = `${String(index+1).padStart(2,"0")} / ${String(galleryItems.length).padStart(2,"0")}`;
+  const navBtn: React.CSSProperties = {
+    position:"absolute",top:"50%",transform:"translateY(-50%)",
+    width:50,height:50,borderRadius:"50%",
+    background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.13)",
+    backdropFilter:"blur(10px)",color:"#fff",cursor:"pointer",
+    display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,outline:"none",
   };
 
   return (
     <AnimatePresence>
-      <motion.div
-        key="lightbox"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.4 }}
+      <motion.div key="lb"
+        initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+        transition={{duration:0.32}}
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 2000,
-          background: "rgba(3,2,1,0.97)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 24,
-          cursor: "default",
+          position:"fixed",inset:0,zIndex:2000,background:"rgba(3,2,1,.97)",
+          display:"flex",alignItems:"center",justifyContent:"center",padding:24,cursor:"default",
         }}
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
-        {/* Close */}
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
+        <motion.button initial={{opacity:0,scale:0.8}} animate={{opacity:1,scale:1}}
           onClick={onClose}
           style={{
-            position: "fixed",
-            top: 28,
-            right: 32,
-            width: 46,
-            height: 46,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            backdropFilter: "blur(10px)",
-            color: "#fff",
-            cursor: "pointer",
-            zIndex: 2001,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            outline: "none",
-          }}
-        >
-          <X size={18} />
+            position:"fixed",top:24,right:28,width:42,height:42,borderRadius:"50%",
+            background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.12)",
+            backdropFilter:"blur(10px)",color:"#fff",cursor:"pointer",zIndex:2001,
+            display:"flex",alignItems:"center",justifyContent:"center",outline:"none",
+          }}>
+          <X size={16}/>
         </motion.button>
-
-        {/* Image wrap */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.86, y: 32 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.93 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{
-            position: "relative",
-            maxWidth: "88vw",
-            maxHeight: "88vh",
-            cursor: "default",
-          }}
+          initial={{opacity:0,scale:0.88,y:26}} animate={{opacity:1,scale:1,y:0}}
+          exit={{opacity:0,scale:0.94}} transition={{duration:0.5,ease:[0.22,1,0.36,1]}}
+          style={{position:"relative",maxWidth:"88vw",maxHeight:"88vh"}}
           onClick={(e) => e.stopPropagation()}
         >
-          <button onClick={() => slide(-1)} style={{ ...btnStyle, left: -70 }}>
-            <ChevronLeft size={22} />
-          </button>
-
-          <img
-            ref={imgRef}
-            src={item.src}
-            alt={item.label}
-            style={{
-              maxWidth: "88vw",
-              maxHeight: "88vh",
-              borderRadius: 8,
-              objectFit: "contain",
-              display: "block",
-              boxShadow: "0 70px 160px rgba(0,0,0,0.9)",
-            }}
-          />
-
-          <button onClick={() => slide(1)} style={{ ...btnStyle, right: -70 }}>
-            <ChevronRight size={22} />
-          </button>
-
-          {/* Meta */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: -46,
-              left: 0,
-              right: 0,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span
-              style={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: 10,
-                letterSpacing: "3px",
-                textTransform: "uppercase",
-                fontFamily: "'DM Sans', sans-serif",
-              }}
-            >
-              {item.label}
-            </span>
-            <span
-              style={{
-                color: "rgba(255,255,255,0.28)",
-                fontSize: 13,
-                fontFamily: "Georgia, serif",
-                fontStyle: "italic",
-                letterSpacing: 3,
-              }}
-            >
-              {counter}
-            </span>
+          <button onClick={() => slide(-1)} style={{...navBtn,left:-64}}><ChevronLeft size={20}/></button>
+          <img ref={imgRef} src={item.src} alt={item.label} style={{
+            maxWidth:"88vw",maxHeight:"88vh",borderRadius:8,objectFit:"contain",display:"block",
+            boxShadow:"0 60px 140px rgba(0,0,0,.8)",
+          }}/>
+          <button onClick={() => slide(1)} style={{...navBtn,right:-64}}><ChevronRight size={20}/></button>
+          <div style={{
+            position:"absolute",bottom:-42,left:0,right:0,
+            display:"flex",justifyContent:"space-between",alignItems:"center",
+          }}>
+            <span style={{color:"rgba(255,255,255,.34)",fontSize:9,letterSpacing:"3px",
+              textTransform:"uppercase",fontFamily:"'DM Sans',sans-serif"}}>{item.label}</span>
+            <span style={{color:"rgba(255,255,255,.22)",fontSize:12,
+              fontFamily:"Georgia,serif",fontStyle:"italic",letterSpacing:3}}>{counter}</span>
           </div>
         </motion.div>
       </motion.div>
@@ -474,217 +266,199 @@ const Lightbox = ({ index, onClose, onPrev, onNext }: LightboxProps) => {
   );
 };
 
-// ── Main Gallery Section ──────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN SECTION
+// ─────────────────────────────────────────────────────────────────────────────
 const GallerySection = () => {
-  const [lbIndex,    setLbIndex]    = useState<number | null>(null);
-  const [cursorView, setCursorView] = useState<boolean>(false);
+  const [lbIndex,    setLbIndex]    = useState<number|null>(null);
+  const [cursorView, setCursorView] = useState(false);
+  // Track if the section has entered the viewport at least once.
+  // Rows are hidden (opacity:0, x:0) until this fires, preventing the
+  // "jump from edge" glitch when navigating from another section.
+  const [activated, setActivated]   = useState(false);
+
   const sectionRef = useRef<HTMLElement>(null);
+
+  // Fire once when section first becomes visible
+  const isInView = useInView(sectionRef, { once: true, margin: "0px 0px -100px 0px" });
+  useEffect(() => {
+    if (isInView) setActivated(true);
+  }, [isInView]);
 
   const openLb  = useCallback((i: number) => setLbIndex(i), []);
   const closeLb = useCallback(() => setLbIndex(null), []);
   const prevLb  = useCallback(
-    () => setLbIndex((p) => p !== null ? (p - 1 + galleryItems.length) % galleryItems.length : null),
-    []
+    () => setLbIndex(p => p !== null ? (p - 1 + galleryItems.length) % galleryItems.length : null), []
   );
   const nextLb  = useCallback(
-    () => setLbIndex((p) => p !== null ? (p + 1) % galleryItems.length : null),
-    []
+    () => setLbIndex(p => p !== null ? (p + 1) % galleryItems.length : null), []
   );
   const onHover = useCallback((v: boolean) => setCursorView(v), []);
+
+  // ── Scroll driver ──
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+
+  // Watermark
+  const wmOpacity = useTransform(scrollYProgress, [0, 0.22], [0, 1]);
+  const wmY       = useTransform(scrollYProgress, [0, 0.22], [56, 0]);
+  const wmScale   = useTransform(scrollYProgress, [0, 0.22], [0.92, 1]);
+
+  // Row translations — only active after section is in view
+  // Clamp keeps them at 0 before activation so no jump occurs on mount
+  const row1Raw = useTransform(
+    scrollYProgress,
+    [0.06, 0.58],
+    activated ? [-320, 0] : [0, 0]   // ← stays at 0 until activated
+  );
+  const row2Raw = useTransform(
+    scrollYProgress,
+    [0.20, 0.72],
+    activated ? [320, 0] : [0, 0]    // ← stays at 0 until activated
+  );
+
+  // Springs — the motion smoothing layer
+  // These values give a natural, weighty feel without any bounce
+  const sc = { stiffness: 50, damping: 18, mass: 0.7, restDelta: 0.001 } as const;
+  const row1X = useSpring(row1Raw, sc);
+  const row2X = useSpring(row2Raw, sc);
 
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
 
-        /* Hide default cursor on desktop */
         @media (pointer: fine) {
-          .gs-wrap * { cursor: none !important; }
+          .gs-section, .gs-section * { cursor: none !important; }
         }
-        /* Hide custom cursor on touch */
-        @media (pointer: coarse) {
-          .gs-cursor { display: none !important; }
-        }
+        @media (pointer: coarse) { .gs-cursor-layer { display:none !important; } }
 
         .gs-row {
           display: flex;
           flex-direction: row;
-          gap: 18px;
-          margin-bottom: 20px;
+          align-items: flex-end;
+          gap: 16px;
+          padding: 0 clamp(20px, 4vw, 52px);
           flex-wrap: nowrap;
-          overflow-x: auto;
-          padding-right: 20px;
         }
 
-        /* Desktop - normal layout */
-        @media (min-width: 1025px) {
-          .gs-row { overflow-x: visible; }
-        }
-
-        /* Tablet - 900px to 1024px */
         @media (max-width: 1024px) {
-          .gs-row { overflow-x: auto; }
-          .gs-row > * { height: 260px !important; }
+          .gs-row { flex-wrap: wrap !important; gap: 14px; }
+          .gs-co {
+            width: calc(50% - 7px) !important; min-width: 0 !important;
+            height: 260px !important; flex: 0 0 calc(50% - 7px) !important;
+          }
+          .gs-co > div { width: 100% !important; height: 100% !important; }
         }
-
-        /* Tablet - 768px to 899px */
-        @media (max-width: 899px) {
-          .gs-row {
-            flex-wrap: wrap;
-            overflow-x: visible;
-            gap: 14px;
-            margin-bottom: 16px;
+        @media (max-width: 640px) {
+          .gs-row { gap: 12px; }
+          .gs-co {
+            width: 100% !important; min-width: 0 !important;
+            height: 230px !important; flex: none !important;
           }
-          .gs-row > * {
-            width: calc(50% - 7px) !important;
-            height: 220px !important;
-            flex: 0 0 calc(50% - 7px);
-          }
-        }
-
-        /* Mobile - 640px to 767px */
-        @media (max-width: 767px) {
-          .gs-row {
-            gap: 12px;
-            margin-bottom: 14px;
-          }
-          .gs-row > * {
-            width: calc(50% - 6px) !important;
-            height: 200px !important;
-            flex: 0 0 calc(50% - 6px);
-          }
-          .gs-wm { font-size: 12vw !important; }
-        }
-
-        /* Mobile - up to 639px */
-        @media (max-width: 639px) {
-          .gs-row {
-            gap: 12px;
-            margin-bottom: 14px;
-          }
-          .gs-row > * {
-            width: 100% !important;
-            height: 200px !important;
-            flex: 0 0 100%;
-          }
-          .gs-wm { font-size: 14vw !important; }
+          .gs-co > div { width: 100% !important; height: 100% !important; }
+          .gs-wm { font-size: 18vw !important; letter-spacing: -3px !important; }
         }
       `}</style>
 
-      {/* Custom cursor */}
-      <div className="gs-cursor">
-        <GalleryCursor isView={cursorView} />
+      {/* Cursor */}
+      <div className="gs-cursor-layer"
+        style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:9990}}>
+        <GalleryCursor isView={cursorView}/>
       </div>
 
       <section
         id="gallery"
         ref={sectionRef}
-        className="gs-wrap"
+        className="gs-section"
         style={{
-          position: "relative",
-          background: "#f5f4f2",
-          overflow: "hidden",
-          paddingBottom: "clamp(40px, 10vh, 90px)",
-          paddingTop: 0,
-          minHeight: "100vh",
+          position:"relative",
+          background:"#f5f4f2",
+          paddingTop:0,
+          paddingBottom:"clamp(72px,9vh,110px)",
+          minHeight:"160vh",
+          overflowX:"hidden",
+          overflowY:"visible",
         }}
       >
-        {/* ── Watermark ── */}
+        {/* Watermark */}
         <motion.div
           className="gs-wm"
-          initial={{ opacity: 0, y: 60, scale: 0.92 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 1.7, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
           style={{
-            position: "absolute",
-            top: -20,
-            left: "50%",
-            transform: "translateX(-50%)",
-            color: "rgba(200,196,188,0.55)",
-            fontFamily: "'Georgia', 'Times New Roman', serif",
-            fontSize: "clamp(88px, 16vw, 240px)",
-            fontWeight: 700,
-            fontStyle: "italic",
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-            letterSpacing: "-4px",
-            pointerEvents: "none",
-            userSelect: "none",
-            zIndex: 0,
+            position:"absolute",
+            top:"clamp(-20px,-1vw,0px)",
+            left:"50%",
+            x:"-50%",
+            opacity: wmOpacity,
+            y: wmY,
+            scale: wmScale,
+            fontSize:"clamp(96px,17vw,250px)",
+            fontFamily:"'Georgia','Times New Roman',serif",
+            fontWeight:700,
+            fontStyle:"italic",
+            lineHeight:1,
+            whiteSpace:"nowrap",
+            letterSpacing:"-5px",
+            color:"rgba(188,183,172,0.40)",
+            pointerEvents:"none",
+            userSelect:"none",
+            zIndex:0,
+            willChange:"transform,opacity",
           }}
         >
           gallery
         </motion.div>
 
-        {/* ── Cards ── */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            paddingTop: "clamp(60px, 8vw, 110px)",
-            paddingLeft: "clamp(12px, 4vw, 40px)",
-            paddingRight: "clamp(12px, 4vw, 40px)",
-            overflowX: "hidden",
-          }}
-        >
-          {/* ROW 1 — slides from LEFT */}
-          <div
-            className="gs-row"
-            style={{
-              position: "relative",
-            }}
-          >
-            {row1Config.map(({ item, w, rounded }, i) => (
-              <ScrollCard
-                key={item.id}
-                item={item}
-                rounded={rounded}
-                onOpen={openLb}
-                onHover={onHover}
-                index={i}
-                sectionRef={sectionRef}
-                direction="left"
-                style={{
-                  width: w,
-                  minWidth: w,
-                  height: 375,
-                  flexShrink: 0,
-                }}
-              />
-            ))}
-          </div>
+        {/* Rows */}
+        <div style={{
+          position:"relative", zIndex:1,
+          paddingTop:"clamp(80px,12vw,155px)",
+          display:"flex", flexDirection:"column", gap:"18px",
+        }}>
 
-          {/* ROW 2 — slides from RIGHT */}
-          <div
+          {/* ── ROW 1: slides in from LEFT ── */}
+          <motion.div
             className="gs-row"
             style={{
-              position: "relative",
+              x: row1X,
+              // Hidden until section activates — prevents flash/jump
+              opacity: activated ? 1 : 0,
+              willChange: "transform, opacity",
             }}
           >
-            {row2Config.map(({ item, w, rounded }, i) => (
-              <ScrollCard
-                key={item.id}
-                item={item}
-                rounded={rounded}
-                onOpen={openLb}
-                onHover={onHover}
-                index={i}
-                sectionRef={sectionRef}
-                direction="right"
-                style={{
-                  width: w,
-                  minWidth: w,
-                  height: 355,
-                  flexShrink: 0,
-                }}
-              />
+            {row1Config.map(({ item, w, h, rounded }) => (
+              <div key={item.id} className="gs-co"
+                style={{width:w,minWidth:w,height:h,flexShrink:0}}>
+                <GalleryCard item={item} w={w} h={h} rounded={rounded}
+                  onOpen={openLb} onHover={onHover}/>
+              </div>
             ))}
-          </div>
+          </motion.div>
+
+          {/* ── ROW 2: slides in from RIGHT ── */}
+          <motion.div
+            className="gs-row"
+            style={{
+              x: row2X,
+              opacity: activated ? 1 : 0,
+              willChange: "transform, opacity",
+            }}
+          >
+            {row2Config.map(({ item, w, h, rounded }) => (
+              <div key={item.id} className="gs-co"
+                style={{width:w,minWidth:w,height:h,flexShrink:0}}>
+                <GalleryCard item={item} w={w} h={h} rounded={rounded}
+                  onOpen={openLb} onHover={onHover}/>
+              </div>
+            ))}
+          </motion.div>
+
         </div>
       </section>
 
-      <Lightbox index={lbIndex} onClose={closeLb} onPrev={prevLb} onNext={nextLb} />
+      <Lightbox index={lbIndex} onClose={closeLb} onPrev={prevLb} onNext={nextLb}/>
     </>
   );
 };

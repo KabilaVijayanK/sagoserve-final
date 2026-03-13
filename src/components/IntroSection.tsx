@@ -243,7 +243,8 @@ const IntroSection = () => {
     `,
 
     padding: "34px 30px",
-    marginRight: "40px",
+    marginRight: "50px",
+    top: "8%",
     overflow: "hidden",
   }}
 >
@@ -255,6 +256,7 @@ const IntroSection = () => {
       left: "-30%",
       width: "180%",
       height: "180%",
+      
       background:
         "linear-gradient(120deg, rgba(255,255,255,0.12), transparent 60%)",
       transform: "rotate(25deg)",
@@ -388,7 +390,7 @@ const IntroSection = () => {
 
         {/* ── FIXED SIDE: ENQUIRE amber ── */}
         <Link to="/contact" className="hs-fixed" style={{
-          position: "fixed", right: 0, top: "36%", transform: "translateY(-50%)",
+          position: "fixed", right: 0, top: "36%", transform: "translateY(-70%)",
           background: "#D4A847", color: "#000",
           fontSize: "10px", fontWeight: 700, letterSpacing: "0.22em",
           padding: "28px 10px", borderRadius: "10px 0 0 10px",
@@ -398,19 +400,7 @@ const IntroSection = () => {
           ENQUIRE
         </Link>
 
-        {/* ── FIXED SIDE: TOP RATES dark glass ── */}
-        <div className="hs-fixed" style={{
-          position: "fixed", right: 0, top: "58%", transform: "translateY(-50%)",
-          background: "rgba(0,0,0,0.72)", color: "#fff",
-          fontSize: "10px", fontWeight: 700, letterSpacing: "0.22em",
-          padding: "22px 10px", borderRadius: "10px 0 0 10px",
-          writingMode: "vertical-rl", zIndex: 50,
-          border: "1px solid rgba(255,255,255,0.11)",
-          backdropFilter: "blur(8px)",
-        }}>
-          TOP RATES
-        </div>
-
+        
       </section>
     </>
   );
