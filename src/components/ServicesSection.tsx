@@ -60,8 +60,8 @@ const ServiceCard = ({ service, index }: { service: typeof services[0]; index: n
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
+      initial={{ opacity: 0 }}
+      animate={inView ? { opacity: 1 } : {}}
       transition={{ delay: index * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -76,11 +76,10 @@ const ServiceCard = ({ service, index }: { service: typeof services[0]; index: n
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
-        transition: "box-shadow 0.3s, transform 0.35s",
+        transition: "box-shadow 0.3s",
         boxShadow: hovered
           ? "0 24px 60px rgba(0,0,0,0.13)"
           : "0 4px 24px rgba(0,0,0,0.06)",
-        transform: hovered ? "translateY(-6px)" : "translateY(0)",
         position: "relative",
         overflow: "hidden",
         border: "1px solid rgba(0,0,0,0.05)",
