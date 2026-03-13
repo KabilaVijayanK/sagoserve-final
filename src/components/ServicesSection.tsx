@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useRef, useEffect, useState, useCallback } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 
 /* ── SERVICE DATA ── */
@@ -45,34 +45,23 @@ const services = [
   },
 ];
 
-/* ── ICON RENDERER (realistic lucide-react icons) ── */
-const IconRenderer = ({ Icon }: { Icon: React.ComponentType<unknown>; }) => (
-  // @ts-expect-error: lucide-react icons accept size, strokeWidth, color props but type definition is restrictive
-  <Icon size={48} strokeWidth={1.5} color="#c08a5b" />
+/* ── ICON RENDERER ── */
+const IconRenderer = ({ Icon }: { Icon: React.ComponentType<unknown> }) => (
+  // @ts-expect-error: lucide icons accept these props
+  <Icon size={44} strokeWidth={1.5} color="#c08a5b" />
 );
 
-/* ── CARD COMPONENT ── */
-const ServiceCard = ({ service, index }: { service: typeof services[0]; index: number }) => {
-  const ref     = useRef<HTMLDivElement>(null);
-  const inView  = useInView(ref, { once: true, margin: "-60px" });
+/* ── CARD — fills full height of its slot so all cards match ── */
+const ServiceCard = ({ service }: { service: typeof services[0] }) => {
   const [hovered, setHovered] = useState(false);
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0 }}
-      animate={inView ? { opacity: 1 } : {}}
-      transition={{ delay: index * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+    <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        /* exact card from image: white bg, rounded, tall portrait, no fixed height */
         background: "#FFFFFF",
         borderRadius: "16px",
-        padding: "32px 28px 36px",
-        minWidth: "280px",
-        flexShrink: 0,
-        width: "calc(25% - 18px)",  /* 4 cards visible like image */
+        padding: "28px 24px 30px",
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
@@ -83,133 +72,183 @@ const ServiceCard = ({ service, index }: { service: typeof services[0]; index: n
         position: "relative",
         overflow: "hidden",
         border: "1px solid rgba(0,0,0,0.05)",
+        /* fill the motion.div wrapper height completely */
+        width: "100%",
+        height: "100%",
       }}
     >
-      {/* TOP ROW: title left, icon right */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: "20px",
-        gap: "12px",
-      }}>
-        {/* TITLE — bold, black, pre-wrap for line breaks */}
-        <h3 style={{
-          fontSize: "22px",
-          fontWeight: 800,
-          lineHeight: 1.2,
-          color: "#111",
-          letterSpacing: "-0.02em",
-          whiteSpace: "pre-line",
-          flex: 1,
-        }}>
+      {/* TOP: title + icon */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "16px",
+          gap: "12px",
+        }}
+      >
+        <h3
+          style={{
+            fontSize: "21px",
+            fontWeight: 800,
+            lineHeight: 1.2,
+            color: "#111",
+            letterSpacing: "-0.02em",
+            whiteSpace: "pre-line",
+            flex: 1,
+            margin: 0,
+          }}
+        >
           {service.title}
         </h3>
-
-        {/* REALISTIC LUCIDE ICON */}
-        <div style={{ 
-          flexShrink: 0, 
-          opacity: hovered ? 1 : 0.75, 
-          transition: "opacity 0.3s, transform 0.3s",
-          transform: hovered ? "scale(1.1)" : "scale(1)",
-        }}>
+        <div
+          style={{
+            flexShrink: 0,
+            opacity: hovered ? 1 : 0.75,
+            transition: "opacity 0.3s, transform 0.3s",
+            transform: hovered ? "scale(1.1)" : "scale(1)",
+          }}
+        >
           <IconRenderer Icon={service.Icon} />
         </div>
       </div>
 
-      {/* DIVIDER — thin, light grey */}
-      <div style={{
-        height: "1px",
-        background: hovered ? "#c08a5b" : "#e8e8e8",
-        marginBottom: "20px",
-        transition: "background 0.3s",
-      }} />
+      {/* DIVIDER */}
+      <div
+        style={{
+          height: "1px",
+          background: hovered ? "#c08a5b" : "#e8e8e8",
+          marginBottom: "16px",
+          transition: "background 0.3s",
+          flexShrink: 0,
+        }}
+      />
 
-      {/* DESCRIPTION */}
-      <p style={{
-        fontSize: "14px",
-        fontWeight: 400,
-        lineHeight: 1.75,
-        color: "#666",
-        flex: 1,
-      }}>
+      {/* DESC — flex:1 pushes any extra space into the text area evenly */}
+      <p
+        style={{
+          fontSize: "13.5px",
+          fontWeight: 400,
+          lineHeight: 1.75,
+          color: "#666",
+          margin: 0,
+          flex: 1,
+        }}
+      >
         {service.desc}
       </p>
 
-      {/* Hover gold accent bottom bar */}
+      {/* Gold bar on hover */}
       <motion.div
         animate={{ scaleX: hovered ? 1 : 0 }}
         transition={{ duration: 0.35 }}
         style={{
           position: "absolute",
-          bottom: 0, left: 0, right: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
           height: "3px",
           background: "linear-gradient(90deg, #8b5e34, #c08a5b)",
           transformOrigin: "left",
         }}
       />
-    </motion.div>
+    </div>
   );
 };
 
 /* ── MAIN SECTION ── */
 const ServicesSection = () => {
-  const headerRef   = useRef<HTMLDivElement>(null);
-  const headerView  = useInView(headerRef, { once: true, margin: "-60px" });
-  const scrollRef   = useRef<HTMLDivElement>(null);
-  const [paused, setPaused] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX]         = useState(0);
-  const [scrollStart, setScrollStart] = useState(0);
-  const animRef = useRef<number>(0);
-  const speed   = useRef(1.2);
+  const headerRef     = useRef<HTMLDivElement>(null);
+  const headerView    = useInView(headerRef, { once: true, margin: "-60px" });
+  const sectionRef    = useRef<HTMLElement>(null);
+  const sectionInView = useInView(sectionRef, { once: true, margin: "-80px" });
 
-  /* ── AUTO SCROLL (seamless duplicate) ── */
+  const scrollRef   = useRef<HTMLDivElement>(null);
+  const [paused, setPaused]         = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const posRef      = useRef(0);
+  const startX      = useRef(0);
+  const scrollStart = useRef(0);
+  const animRef     = useRef<number>(0);
+
+  /* ── SMOOTH RAF TICKER ── */
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-    const animate = () => {
+    const tick = () => {
       if (!paused && !isDragging) {
-        container.scrollLeft += speed.current;
+        posRef.current += 0.8;
         const half = container.scrollWidth / 2;
-        if (container.scrollLeft >= half) {
-          container.scrollLeft -= half;
-        }
+        if (posRef.current >= half) posRef.current -= half;
+        container.scrollLeft = posRef.current;
       }
-      animRef.current = requestAnimationFrame(animate);
+      animRef.current = requestAnimationFrame(tick);
     };
-    animRef.current = requestAnimationFrame(animate);
+    animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
   }, [paused, isDragging]);
 
-  /* ── DRAG TO SCROLL ── */
+  /* ── MOUSE DRAG ── */
   const onMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setStartX(e.pageX);
-    setScrollStart(scrollRef.current?.scrollLeft || 0);
+    startX.current      = e.pageX;
+    scrollStart.current = posRef.current;
     setPaused(true);
   };
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    const dx = e.pageX - startX;
-    scrollRef.current.scrollLeft = scrollStart - dx;
-  }, [isDragging, startX, scrollStart]);
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isDragging || !scrollRef.current) return;
+      const next = scrollStart.current - (e.pageX - startX.current);
+      posRef.current = next;
+      scrollRef.current.scrollLeft = next;
+    },
+    [isDragging]
+  );
   const onMouseUp = () => {
     setIsDragging(false);
-    setTimeout(() => setPaused(false), 1500);
+    setTimeout(() => setPaused(false), 1200);
   };
 
-  /* ── ARROW SCROLL ── */
-  const scrollBy = (dir: "left" | "right") => {
+  /* ── TOUCH ── */
+  const onTouchStart = (e: React.TouchEvent) => {
+    startX.current      = e.touches[0].pageX;
+    scrollStart.current = posRef.current;
     setPaused(true);
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+    const next = scrollStart.current - (e.touches[0].pageX - startX.current);
+    posRef.current = next;
+    scrollRef.current.scrollLeft = next;
+  };
+  const onTouchEnd = () => setTimeout(() => setPaused(false), 1200);
+
+  /* ── ARROW ── */
+  const scrollByCard = (dir: "left" | "right") => {
     const container = scrollRef.current;
     if (!container) return;
-    const cardW = 298;  // card width + gap
-    container.scrollLeft += dir === "right" ? cardW : -cardW;
-    setTimeout(() => setPaused(false), 1800);
+    setPaused(true);
+    const from = posRef.current;
+    const to   = from + (dir === "right" ? 300 : -300);
+    const dur  = 420;
+    let t0: number | null = null;
+    const step = (ts: number) => {
+      if (!t0) t0 = ts;
+      const p    = Math.min((ts - t0) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      const half = container.scrollWidth / 2;
+      const next = ((from + (to - from) * ease) % half + half) % half;
+      posRef.current = next;
+      container.scrollLeft = next;
+      if (p < 1) requestAnimationFrame(step);
+      else setTimeout(() => setPaused(false), 600);
+    };
+    requestAnimationFrame(step);
   };
 
-  /* Duplicated cards for seamless loop */
+  const getInitialX = (index: number) =>
+    index < Math.ceil(services.length / 2) ? "-60vw" : "60vw";
+
   const doubled = [...services, ...services];
 
   return (
@@ -220,48 +259,61 @@ const ServicesSection = () => {
         .ss a { text-decoration: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .arrow-btn:hover { background: #111 !important; color: #fff !important; }
+        .ss-arrowbtn:hover { background: #111 !important; color: #fff !important; }
         .explore-link:hover { background: #111 !important; }
+
         @media (max-width: 900px) {
-          .ss-header-cols { flex-direction: column !important; min-height: auto !important; }
-          .ss-header-left { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(0,0,0,0.12) !important; padding: 24px 20px !important; justify-content: flex-start !important; }
-          .ss-header-right { padding: 24px 0 0 0 !important; }
+          .ss-header-cols  { flex-direction: column !important; min-height: auto !important; }
+          .ss-header-left  { width: 100% !important; padding: 24px 20px !important; justify-content: flex-start !important; }
+          .ss-header-right { padding: 16px 0 0 0 !important; }
+          .ss-vdiv         { display: none !important; }
+          .ss-section      { padding: 40px 0 40px !important; }
+          .ss-hw           { padding: 0 20px !important; margin-bottom: 36px !important; }
+          .ss-arrowbtn     { display: none !important; }
+          .ss-ctaline      { display: none !important; }
+          .ss-ctawrap      { padding: 0 20px !important; }
+          .ss-card-slot    { min-width: 220px !important; width: 220px !important; }
+        }
+        @media (max-width: 480px) {
+          .ss-card-slot { min-width: 190px !important; width: 190px !important; }
         }
       `}</style>
 
       <section
-        className="ss"
+        ref={sectionRef}
+        className="ss ss-section"
         style={{
           width: "100%",
-          background: "#F5F4F1",   /* exact warm off-white from image */
+          background: "#F5F4F1",
           padding: "70px 0 60px",
-          overflow: "hidden",
+          overflowX: "hidden",
+          overflowY: "visible",
           position: "relative",
         }}
       >
-       {/* ── IMAGE WATERMARK ── */}
-<div
-  style={{
-    position: "absolute",
-    top: "40px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: "700px",
-    height: "400px",
-    opacity: 0.18,
-    backgroundImage: 'url("/Photos/Image%201.png")',
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
-    backgroundSize: "contain",
-    pointerEvents: "none",
-    zIndex: 0,
-  }}
-/>
-        {/* ══════════════════════════
-            HEADER
-        ══════════════════════════ */}
+        {/* WATERMARK */}
+        <div
+          style={{
+            position: "absolute",
+            top: "40px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "700px",
+            height: "400px",
+            opacity: 0.18,
+            backgroundImage: 'url("/Photos/Image%201.png")',
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            backgroundSize: "contain",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
+        {/* ══ HEADER ══ */}
         <div
           ref={headerRef}
+          className="ss-hw"
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
@@ -271,30 +323,28 @@ const ServicesSection = () => {
             zIndex: 1,
           }}
         >
-          {/* Two-column header layout */}
-          <div className="ss-header-cols" style={{
-            display: "flex",
-            alignItems: "stretch",
-            minHeight: "160px",
-            position: "relative",
-          }}>
-            {/* Horizontal divider line — across full width at top */}
+          <div
+            className="ss-header-cols"
+            style={{
+              display: "flex",
+              alignItems: "stretch",
+              minHeight: "160px",
+              position: "relative",
+            }}
+          >
             <div
               style={{
                 position: "absolute",
                 top: 0,
                 left: 200,
-                right: 400,
-                
                 width: "500px",
                 height: "1px",
                 background: "rgba(0,0,0,0.15)",
                 zIndex: 0,
               }}
             />
-
-            {/* Vertical divider line — at 280px boundary */}
             <div
+              className="ss-vdiv"
               style={{
                 position: "absolute",
                 left: "280px",
@@ -306,7 +356,6 @@ const ServicesSection = () => {
               }}
             />
 
-            {/* LEFT — Badge */}
             <motion.div
               className="ss-header-left"
               initial={{ opacity: 0, x: -20 }}
@@ -315,7 +364,6 @@ const ServicesSection = () => {
               style={{
                 width: "280px",
                 flexShrink: 0,
-                top: -40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -324,170 +372,259 @@ const ServicesSection = () => {
                 zIndex: 1,
               }}
             >
-              <div style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "#fff",
-                border: "1.5px solid #1a1a1a",
-                borderRadius: "999px",
-                padding: "8px 20px",
-              }}>
-                <span style={{
-                  width: "8px", height: "8px", borderRadius: "50%",
-                  background: "#5f9bf5", display: "block", flexShrink: 0,
-                }} />
-                <span style={{
-                  fontSize: "12px", fontWeight: 600,
-                  letterSpacing: "0.14em", color: "#1a1a1a",
-                  textTransform: "uppercase",
-                }}>WHAT WE DO</span>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "#fff",
+                  border: "1.5px solid #1a1a1a",
+                  borderRadius: "999px",
+                  padding: "8px 20px",
+                }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#5f9bf5",
+                    display: "block",
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    letterSpacing: "0.14em",
+                    color: "#1a1a1a",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  WHAT WE DO
+                </span>
               </div>
             </motion.div>
 
-            {/* RIGHT — Heading + Description */}
-            <div className="ss-header-right" style={{
-              flex: 1,
-              padding: "40px 0 40px 48px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              position: "relative",
-              zIndex: 1,
-            }}>
+            <div
+              className="ss-header-right"
+              style={{
+                flex: 1,
+                padding: "40px 0 40px 48px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={headerView ? { opacity: 1, y: 0 } : {}}
-                viewport={{ once: true }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                style={{ marginBottom: "30px" }}
               >
-                <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: "800", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#111827", margin: "0 0 1px", lineHeight: 1.15, letterSpacing: "-0.4px" }}>
+                <h2
+                  style={{
+                    fontSize: "clamp(22px,3vw,36px)",
+                    fontWeight: 800,
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    color: "#111827",
+                    margin: "0 0 1px",
+                    lineHeight: 1.15,
+                    letterSpacing: "-0.4px",
+                  }}
+                >
                   Experience
                 </h2>
-                <h2 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: "800", fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#5f9bf5", margin: "0 0 14px", lineHeight: 1.15, letterSpacing: "-0.4px" }}>
+                <h2
+                  style={{
+                    fontSize: "clamp(22px,3vw,36px)",
+                    fontWeight: 800,
+                    fontFamily: "'Plus Jakarta Sans',sans-serif",
+                    color: "#5f9bf5",
+                    margin: "0 0 14px",
+                    lineHeight: 1.15,
+                    letterSpacing: "-0.4px",
+                  }}
+                >
                   The Purity Of Salem Sago
                 </h2>
-                <p style={{ fontSize: "13.5px", color: "#555f6e", lineHeight: 1.75, maxWidth: "580px", margin: 0, fontFamily: "'DM Sans',sans-serif" }}>
-                  SAGOSERVE has been strengthening the tapioca sago and starch industry through cooperation, quality assurance, and transparent trade practices for over five decades.
+                <p
+                  style={{
+                    fontSize: "13.5px",
+                    color: "#555f6e",
+                    lineHeight: 1.75,
+                    maxWidth: "580px",
+                    margin: 0,
+                    fontFamily: "'DM Sans',sans-serif",
+                  }}
+                >
+                  SAGOSERVE has been strengthening the tapioca sago and starch
+                  industry through cooperation, quality assurance, and
+                  transparent trade practices for over five decades.
                 </p>
               </motion.div>
             </div>
           </div>
         </div>
 
-        {/* ══════════════════════════
-            CAROUSEL
-        ══════════════════════════ */}
+        {/* ══ CAROUSEL — full 100vw ══ */}
         <div
           style={{
             position: "relative",
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "0 56px",
+            width: "100vw",
+            left: "50%",
+            transform: "translateX(-50%)",
             zIndex: 2,
           }}
         >
           {/* LEFT ARROW */}
           <button
-            onClick={() => scrollBy("left")}
-            className="arrow-btn"
+            onClick={() => scrollByCard("left")}
+            className="ss-arrowbtn"
             style={{
               position: "absolute",
-              left: "14px",
+              left: "12px",
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 20,
-              width: "40px", height: "40px",
+              width: "40px",
+              height: "40px",
               borderRadius: "50%",
               background: "#fff",
               border: "1px solid rgba(0,0,0,0.10)",
               cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               fontSize: "18px",
               color: "#333",
               transition: "background 0.2s, color 0.2s",
               boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
             }}
-          >‹</button>
+          >
+            ‹
+          </button>
 
           {/* RIGHT ARROW */}
           <button
-            onClick={() => scrollBy("right")}
-            className="arrow-btn"
+            onClick={() => scrollByCard("right")}
+            className="ss-arrowbtn"
             style={{
               position: "absolute",
-              right: "14px",
+              right: "12px",
               top: "50%",
               transform: "translateY(-50%)",
               zIndex: 20,
-              width: "40px", height: "40px",
+              width: "40px",
+              height: "40px",
               borderRadius: "50%",
               background: "#fff",
               border: "1px solid rgba(0,0,0,0.10)",
               cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               fontSize: "18px",
               color: "#333",
               transition: "background 0.2s, color 0.2s",
               boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
             }}
-          >›</button>
+          >
+            ›
+          </button>
 
-          {/* TRACK */}
-          <div style={{ overflow: "hidden", borderRadius: "4px" }}>
-            <div
-              ref={scrollRef}
-              className="no-scrollbar"
-              onMouseDown={onMouseDown}
-              onMouseMove={onMouseMove}
-              onMouseUp={onMouseUp}
-              onMouseLeave={onMouseUp}
-              onMouseEnter={() => setPaused(true)}
-              style={{
-                display: "flex",
-                gap: "20px",
-                overflowX: "scroll",
-                cursor: isDragging ? "grabbing" : "grab",
-                paddingBottom: "8px",
-                userSelect: "none",
-              }}
-            >
-              {doubled.map((service, i) => (
-                <ServiceCard key={i} service={service} index={i % services.length} />
-              ))}
-            </div>
+          {/* SCROLL TRACK
+              alignItems: "stretch" → all card slots grow to the tallest card's height
+              The card inside uses height:100% to fill that slot completely
+              Result: every card is exactly the same height automatically
+          */}
+          <div
+            ref={scrollRef}
+            className="no-scrollbar"
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseUp}
+            onMouseEnter={() => setPaused(true)}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{
+              display: "flex",
+              gap: "20px",
+              overflowX: "scroll",
+              cursor: isDragging ? "grabbing" : "grab",
+              paddingBottom: "12px",
+              userSelect: "none",
+              alignItems: "stretch", /* ← key: all slots same height */
+            }}
+          >
+            {doubled.map((service, i) => {
+              const isFirstSet = i < services.length;
+              const cardIndex  = i % services.length;
+              const initX      = getInitialX(cardIndex);
+
+              return (
+                <motion.div
+                  key={i}
+                  className="ss-card-slot"
+                  initial={isFirstSet ? { opacity: 0, x: initX } : false}
+                  animate={
+                    isFirstSet
+                      ? sectionInView
+                        ? { opacity: 1, x: 0 }
+                        : { opacity: 0, x: initX }
+                      : {}
+                  }
+                  transition={
+                    isFirstSet
+                      ? { duration: 0.72, ease: [0.25, 0.46, 0.45, 0.94] }
+                      : {}
+                  }
+                  style={{
+                    minWidth: "280px",
+                    width: "280px",
+                    flexShrink: 0,
+                    /* display:flex + height:100% lets the card fill this slot */
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
+                  <ServiceCard service={service} />
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
-        {/* ══════════════════════════
-            BOTTOM CTA — lines + button
-        ══════════════════════════ */}
+        {/* ══ BOTTOM CTA ══ */}
         <motion.div
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
           viewport={{ once: true }}
+          className="ss-ctawrap"
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "32px",
-            marginTop: "80px",
             padding: "0 56px",
             maxWidth: "1200px",
             margin: "80px auto 0",
           }}
         >
-          {/* Left line */}
-          <div style={{
-            flex: 1,
-            maxWidth: "320px",
-            height: "1px",
-            background: "linear-gradient(to right, transparent, #111 80%, #111)",
-          }} />
-
-          {/* CTA Button */}
+          <div
+            className="ss-ctaline"
+            style={{
+              flex: 1,
+              maxWidth: "320px",
+              height: "1px",
+              background: "linear-gradient(to right, transparent, #111 80%, #111)",
+            }}
+          />
           <Link
             to="/services"
             className="explore-link"
@@ -510,16 +647,16 @@ const ServicesSection = () => {
             Explore Services
             <ArrowUpRight size={18} />
           </Link>
-
-          {/* Right line */}
-          <div style={{
-            flex: 1,
-            maxWidth: "320px",
-            height: "1px",
-            background: "linear-gradient(to left, transparent, #111 80%, #111)",
-          }} />
+          <div
+            className="ss-ctaline"
+            style={{
+              flex: 1,
+              maxWidth: "320px",
+              height: "1px",
+              background: "linear-gradient(to left, transparent, #111 80%, #111)",
+            }}
+          />
         </motion.div>
-
       </section>
     </>
   );

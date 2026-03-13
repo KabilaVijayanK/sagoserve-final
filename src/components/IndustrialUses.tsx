@@ -141,25 +141,11 @@ const lineGrowY = {
   visible: { scaleY: 1, transition: { duration: 0.7, delay: 0.3 } },
 };
 
-// ── Animated section wrapper ───────────────────────────────────────────────────
-const InViewSection: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  return (
-    <div ref={ref} style={style}>
-      {React.Children.map(children, (child) =>
-        React.isValidElement(child) ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, { inView }) : child
-      )}
-    </div>
-  );
-};
-
 // ── Component ──────────────────────────────────────────────────────────────────
 const IndustrialUses: React.FC = () => {
   const offWhite = "#f0ede7";
   const font = "'Poppins', sans-serif";
 
-  // Separate refs for each section
   const headerRef = useRef<HTMLDivElement>(null);
   const headerInView = useInView(headerRef, { once: true, margin: "-40px" });
 
@@ -171,65 +157,336 @@ const IndustrialUses: React.FC = () => {
 
   return (
     <>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');`}</style>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
-      <div style={{ backgroundColor: offWhite, minHeight: "100vh", fontFamily: font, overflow: "hidden" }}>
+        .iu-root {
+          background-color: #f0ede7;
+          min-height: 100vh;
+          font-family: 'Poppins', sans-serif;
+          overflow: hidden;
+        }
+
+        /* ── HEADER ── */
+        .iu-header {
+          background-color: #f0ede7;
+          position: relative;
+        }
+        .iu-header-rule {
+          position: absolute;
+          top: 60px;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background-color: #d4cfc7;
+          z-index: 1;
+          transform-origin: left;
+        }
+        .iu-header-inner {
+          display: flex;
+          align-items: stretch;
+          min-height: 210px;
+        }
+        .iu-badge-col {
+          width: 300px;
+          flex-shrink: 0;
+          padding: 20px 0 32px 52px;
+          position: relative;
+          display: flex;
+          align-items: flex-start;
+        }
+        .iu-badge-divider {
+          position: absolute;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          width: 1px;
+          background-color: #d4cfc7;
+          z-index: 2;
+          transform-origin: top;
+        }
+        .iu-heading-col {
+          flex: 1;
+          padding: 72px 80px 40px 56px;
+        }
+        .iu-h2 {
+          font-size: 42px;
+          font-weight: 800;
+          color: #111827;
+          margin: 0;
+          line-height: 1.2;
+          letter-spacing: -0.5px;
+        }
+        .iu-h2-blue {
+          font-size: 42px;
+          font-weight: 800;
+          color: #5f9bf5;
+          margin: 0 0 20px 0;
+          line-height: 1.2;
+          letter-spacing: -0.5px;
+        }
+        .iu-desc {
+          font-size: 14px;
+          color: #555;
+          line-height: 1.8;
+          max-width: 660px;
+          margin: 0;
+          font-weight: 400;
+        }
+
+        /* ── BODY ── */
+        .iu-body {
+          display: flex;
+          align-items: flex-start;
+          background-color: #f0ede7;
+        }
+        .iu-image-wrap {
+          flex-shrink: 0;
+          width: 420px;
+          height: 460px;
+          overflow: hidden;
+          position: relative;
+        }
+        .iu-image-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+          filter: grayscale(40%) opacity(0.8);
+        }
+        .iu-cards-wrap {
+          flex: 1;
+          padding: 32px 52px 40px 48px;
+        }
+        .iu-cards-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        .iu-card {
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 20px 20px 18px 18px;
+          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+          position: relative;
+          border: 1px solid #ececec;
+        }
+        .iu-card-num {
+          position: absolute;
+          top: 14px;
+          right: 16px;
+          font-size: 11px;
+          color: #1e3a8a;
+          font-weight: 700;
+        }
+        .iu-card-header {
+          display: flex;
+          align-items: center;
+          gap: 13px;
+          margin-bottom: 10px;
+        }
+        .iu-icon-box {
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
+          background-color: #f5ece7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .iu-card-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #111;
+          line-height: 1.35;
+        }
+        .iu-card-body {
+          font-size: 11.5px;
+          color: #666;
+          margin: 0;
+          line-height: 1.6;
+          padding-left: 61px;
+        }
+
+        /* ── BOTTOM ── */
+        .iu-bottom {
+          padding: 0px 52px 52px 52px;
+          margin-top: -28px;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr 1fr;
+          gap: 20px;
+          background-color: transparent;
+          position: relative;
+          z-index: 2;
+        }
+        .iu-bottom-card {
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 18px 18px 18px 16px;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+          border: 1px solid #ececec;
+        }
+        .iu-bottom-num {
+          display: block;
+          font-size: 11px;
+          color: #1e3a8a;
+          font-weight: 700;
+          margin-bottom: 12px;
+          letter-spacing: 0.3px;
+        }
+        .iu-bottom-card-inner {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .iu-icon-box-sm {
+          width: 44px;
+          height: 44px;
+          border-radius: 9px;
+          background-color: #f5ece7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .iu-bottom-title {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #111;
+          margin: 0 0 5px 0;
+          line-height: 1.35;
+        }
+        .iu-bottom-desc {
+          font-size: 11px;
+          color: #666;
+          margin: 0;
+          line-height: 1.6;
+        }
+
+        /* ── tp-pill (Application badge) ── */
+        .tp-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border: 1.5px solid #d4cfc7;
+          border-radius: 28px;
+          padding: 6px 18px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #111;
+          font-family: 'Poppins', sans-serif;
+          background-color: #f0ede7;
+        }
+
+        /* ══════════════════════════════════════════
+           TABLET  (≤ 900px)
+        ══════════════════════════════════════════ */
+        @media (max-width: 900px) {
+          .iu-header-rule { top: 52px; }
+          .iu-badge-col { width: 180px; padding: 16px 0 24px 28px; }
+          .iu-heading-col { padding: 60px 32px 32px 28px; }
+          .iu-h2, .iu-h2-blue { font-size: 30px; }
+          .iu-desc { font-size: 13px; }
+
+          .iu-image-wrap { width: 260px; height: 380px; }
+          .iu-cards-wrap { padding: 20px 24px 28px 20px; }
+
+          .iu-bottom {
+            grid-template-columns: 1fr 1fr;
+            padding: 0 24px 40px 24px;
+            gap: 14px;
+          }
+        }
+
+        /* ══════════════════════════════════════════
+           MOBILE  (≤ 600px)
+        ══════════════════════════════════════════ */
+        @media (max-width: 600px) {
+          /* Header becomes single column */
+          .iu-header-rule { top: 44px; }
+          .iu-header-inner { flex-direction: column; min-height: unset; }
+
+          .iu-badge-col {
+            width: 100%;
+            padding: 16px 20px 12px 20px;
+            align-items: center;
+          }
+          .iu-badge-divider { display: none; }
+
+          /* Horizontal divider below badge row */
+          .iu-badge-col::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background-color: #d4cfc7;
+          }
+
+          .iu-heading-col {
+            padding: 24px 20px 28px 20px;
+          }
+          .iu-h2, .iu-h2-blue { font-size: 26px; }
+          .iu-desc { font-size: 13px; max-width: 100%; }
+
+          /* Body stacks vertically */
+          .iu-body { flex-direction: column; }
+          .iu-image-wrap {
+            width: 100%;
+            height: 220px;
+          }
+          .iu-cards-wrap { padding: 20px 16px 16px 16px; }
+          .iu-cards-grid { grid-template-columns: 1fr; gap: 12px; }
+
+          /* Card body text no longer needs the icon offset */
+          .iu-card-body { padding-left: 0; margin-top: 6px; }
+
+          /* Bottom grid: 1 column */
+          .iu-bottom {
+            grid-template-columns: 1fr;
+            padding: 0 16px 36px 16px;
+            gap: 12px;
+            margin-top: 0;
+          }
+        }
+
+        /* ══════════════════════════════════════════
+           VERY SMALL (≤ 380px)
+        ══════════════════════════════════════════ */
+        @media (max-width: 380px) {
+          .iu-h2, .iu-h2-blue { font-size: 22px; }
+        }
+      `}</style>
+
+      <div className="iu-root">
 
         {/* ══════════════════════════════════════════
             HEADER
         ══════════════════════════════════════════ */}
-        <div ref={headerRef} style={{ backgroundColor: offWhite, position: "relative" }}>
+        <div className="iu-header" ref={headerRef}>
 
-          {/* Horizontal rule — animates growing from left */}
           <motion.div
+            className="iu-header-rule"
             initial="hidden"
             animate={headerInView ? "visible" : "hidden"}
             variants={lineGrow}
-            style={{
-              position: "absolute",
-              top: "60px",
-              left: "0",
-              right: "0",
-              height: "1px",
-              backgroundColor: "#d4cfc7",
-              zIndex: 1,
-              transformOrigin: "left",
-            }}
           />
 
-          <div style={{ display: "flex", alignItems: "stretch", minHeight: "210px" }}>
+          <div className="iu-header-inner">
 
             {/* Left — badge */}
             <motion.div
+              className="iu-badge-col"
               initial="hidden"
               animate={headerInView ? "visible" : "hidden"}
               variants={fadeUp}
               custom={0}
-              style={{
-                width: "300px",
-                flexShrink: 0,
-                padding: "20px 0 32px 52px",
-                position: "relative",
-                display: "flex",
-                alignItems: "flex-start",
-              }}
             >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "9px",
-                 
-                  borderRadius: "28px",
-                  padding: "7px 22px",
-                  marginTop: "56px",
-                  zIndex: 2,
-                  position: "relative",
-                  backgroundColor: offWhite,
-                }}
-              >
-               
-                 <motion.div
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "9px", borderRadius: "28px", padding: "7px 22px", marginTop: "56px", zIndex: 2, position: "relative", backgroundColor: offWhite }}>
+                <motion.div
                   initial={{ opacity: 0, x: -14 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
@@ -240,50 +497,43 @@ const IndustrialUses: React.FC = () => {
                 </motion.div>
               </div>
 
-              {/* Vertical divider — animates growing down */}
               <motion.div
+                className="iu-badge-divider"
                 initial="hidden"
                 animate={headerInView ? "visible" : "hidden"}
                 variants={lineGrowY}
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: "1px",
-                  backgroundColor: "#d4cfc7",
-                  zIndex: 2,
-                  transformOrigin: "top",
-                }}
               />
             </motion.div>
 
             {/* Right — heading + description */}
-            <div style={{ flex: 1, padding: "72px 80px 40px 56px" }}>
+            <div className="iu-heading-col">
               <motion.h2
+                className="iu-h2"
                 initial="hidden"
                 animate={headerInView ? "visible" : "hidden"}
                 variants={fadeUp}
                 custom={1}
-                style={{ fontSize: "42px", fontWeight: 800, color: "#111827", margin: "0", lineHeight: 1.2, letterSpacing: "-0.5px", fontFamily: font }}
+                style={{ fontFamily: font }}
               >
                 Industrial Uses of
               </motion.h2>
               <motion.h2
+                className="iu-h2-blue"
                 initial="hidden"
                 animate={headerInView ? "visible" : "hidden"}
                 variants={fadeUp}
                 custom={2}
-                style={{ fontSize: "42px", fontWeight: 800, color: "#5f9bf5", margin: "0 0 20px 0", lineHeight: 1.2, letterSpacing: "-0.5px", fontFamily: font }}
+                style={{ fontFamily: font }}
               >
                 Tapioca Starch
               </motion.h2>
               <motion.p
+                className="iu-desc"
                 initial="hidden"
                 animate={headerInView ? "visible" : "hidden"}
                 variants={fadeUp}
                 custom={3}
-                style={{ fontSize: "14px", color: "#555", lineHeight: 1.8, maxWidth: "660px", margin: 0, fontFamily: font, fontWeight: 400 }}
+                style={{ fontFamily: font }}
               >
                 Tapioca starch is widely used in industries like food, paper, textiles, and
                 adhesives. It acts as a natural thickener and binder, making products
@@ -296,21 +546,18 @@ const IndustrialUses: React.FC = () => {
         {/* ══════════════════════════════════════════
             BODY — image + 2×2 cards
         ══════════════════════════════════════════ */}
-        <div
-          ref={bodyRef}
-          style={{ display: "flex", alignItems: "flex-start", backgroundColor: offWhite }}
-        >
-          {/* Left – image slides in from left */}
+        <div className="iu-body" ref={bodyRef}>
+
+          {/* Left – image */}
           <motion.div
+            className="iu-image-wrap"
             initial="hidden"
             animate={bodyInView ? "visible" : "hidden"}
             variants={fadeLeft}
-            style={{ flexShrink: 0, width: "420px", height: "460px", overflow: "hidden", position: "relative" }}
           >
             <img
               src="/photo2.png"
               alt="Industrial plant"
-              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block", filter: "grayscale(40%) opacity(0.8)" }}
               onError={(e) => {
                 const t = e.currentTarget;
                 if (!t.dataset.tried) { t.dataset.tried = "1"; t.src = "/photo2.jpg"; }
@@ -319,44 +566,29 @@ const IndustrialUses: React.FC = () => {
             />
           </motion.div>
 
-          {/* Right – cards stagger in from right */}
+          {/* Right – cards */}
           <motion.div
+            className="iu-cards-wrap"
             initial="hidden"
             animate={bodyInView ? "visible" : "hidden"}
             variants={fadeRight}
-            style={{ flex: 1, padding: "32px 52px 40px 48px" }}
           >
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div className="iu-cards-grid">
               {topCards.map((card, i) => (
                 <motion.div
                   key={i}
+                  className="iu-card"
                   initial="hidden"
                   animate={bodyInView ? "visible" : "hidden"}
                   variants={fadeUp}
                   custom={i}
-                  style={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: "12px",
-                    padding: "20px 20px 18px 18px",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
-                    position: "relative",
-                    border: "1px solid #ececec",
-                  }}
                 >
-                  <span style={{ position: "absolute", top: "14px", right: "16px", fontSize: "11px", color: "#1e3a8a", fontWeight: 700, fontFamily: font }}>
-                    {card.id}
-                  </span>
-                  <div style={{ display: "flex", alignItems: "center", gap: "13px", marginBottom: "10px" }}>
-                    <div style={{ width: "48px", height: "48px", borderRadius: "10px", backgroundColor: "#f5ece7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      {card.icon}
-                    </div>
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: "#111", lineHeight: 1.35, fontFamily: font }}>
-                      {card.title}
-                    </span>
+                  <span className="iu-card-num" style={{ fontFamily: font }}>{card.id}</span>
+                  <div className="iu-card-header">
+                    <div className="iu-icon-box">{card.icon}</div>
+                    <span className="iu-card-title" style={{ fontFamily: font }}>{card.title}</span>
                   </div>
-                  <p style={{ fontSize: "11.5px", color: "#666", margin: 0, lineHeight: 1.6, paddingLeft: "61px", fontFamily: font }}>
-                    {card.description}
-                  </p>
+                  <p className="iu-card-body" style={{ fontFamily: font }}>{card.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -364,50 +596,24 @@ const IndustrialUses: React.FC = () => {
         </div>
 
         {/* ══════════════════════════════════════════
-            BOTTOM 4 — white cards, shifted up -28px
+            BOTTOM 4 CARDS
         ══════════════════════════════════════════ */}
-        <div
-          ref={bottomRef}
-          style={{
-            padding: "0px 52px 52px 52px",
-            marginTop: "-28px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr 1fr",
-            gap: "20px",
-            backgroundColor: "transparent",
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
+        <div className="iu-bottom" ref={bottomRef}>
           {bottomCards.map((card, i) => (
             <motion.div
               key={i}
+              className="iu-bottom-card"
               initial="hidden"
               animate={bottomInView ? "visible" : "hidden"}
               variants={fadeUp}
               custom={i}
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "12px",
-                padding: "18px 18px 18px 16px",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-                border: "1px solid #ececec",
-              }}
             >
-              <span style={{ display: "block", fontSize: "11px", color: "#1e3a8a", fontWeight: 700, marginBottom: "12px", letterSpacing: "0.3px", fontFamily: font }}>
-                {card.id}
-              </span>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <div style={{ width: "44px", height: "44px", borderRadius: "9px", backgroundColor: "#f5ece7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {card.icon}
-                </div>
+              <span className="iu-bottom-num" style={{ fontFamily: font }}>{card.id}</span>
+              <div className="iu-bottom-card-inner">
+                <div className="iu-icon-box-sm">{card.icon}</div>
                 <div>
-                  <p style={{ fontSize: "12.5px", fontWeight: 700, color: "#111", margin: "0 0 5px 0", lineHeight: 1.35, fontFamily: font }}>
-                    {card.title}
-                  </p>
-                  <p style={{ fontSize: "11px", color: "#666", margin: 0, lineHeight: 1.6, fontFamily: font }}>
-                    {card.description}
-                  </p>
+                  <p className="iu-bottom-title" style={{ fontFamily: font }}>{card.title}</p>
+                  <p className="iu-bottom-desc" style={{ fontFamily: font }}>{card.description}</p>
                 </div>
               </div>
             </motion.div>
