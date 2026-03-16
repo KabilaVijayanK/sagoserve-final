@@ -1,22 +1,39 @@
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 /* ── stagger helper ── */
 const stagger = (i: number) => ({ delay: 0.1 + i * 0.12, duration: 0.7 });
 
 const checkItems = [
-  { label: "Certified Quality",    col: 0 },
-  { label: "High-Grade Products",  col: 1 },
-  { label: "Cooperative Pricing",  col: 0 },
-  { label: "Member Benefits",      col: 1 },
+  { label: "Certified Quality",   col: 0 },
+  { label: "High-Grade Products", col: 1 },
+  { label: "Cooperative Pricing", col: 0 },
+  { label: "Member Benefits",     col: 1 },
 ];
+
+/* ── simple hook to track window width ── */
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  return width;
+}
 
 const HeroUltra = () => {
   const ref    = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
-
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+
+  const width     = useWindowWidth();
+  const isMobile  = width <= 480;
+  const isTablet  = width > 480 && width <= 900;
+  const isDesktop = width > 900;
 
   return (
     <>
@@ -39,31 +56,16 @@ const HeroUltra = () => {
         }
         .badge-pill { animation: pulse-ring 2.4s ease-out infinite; }
         .scroll-btn { animation: float 2.8s ease-in-out infinite; }
-        @media (max-width: 900px) {
-          .hu2-section { flex-direction: column !important; height: auto !important; min-height: auto !important; }
-          .hu2-left { width: 100% !important; padding: 40px 24px 32px !important; }
-          .hu2-right { padding: 0 16px 32px !important; }
-          .hu2-headline span { font-size: clamp(32px, 7vw, 48px) !important; }
-          .hu2-photo { width: 100% !important; border-radius: 16px !important; height: 320px !important; }
-          .hu2-vertlabel { display: none !important; }
-        }
-        @media (max-width: 480px) {
-          .hu2-left { padding: 32px 16px 24px !important; }
-          .hu2-right { padding: 0 12px 24px !important; }
-          .hu2-headline span { font-size: clamp(28px, 8vw, 38px) !important; }
-          .hu2-checklist { grid-template-columns: 1fr !important; }
-          .hu2-photo { height: 240px !important; }
-        }
       `}</style>
 
       <section
         ref={ref}
-        className="hu2 hu2-section"
+        className="hu2"
         style={{
           width: "100%",
-          height: "auto",
-          minHeight: "100vh",
+          minHeight: isDesktop ? "100vh" : "auto",
           display: "flex",
+          flexDirection: isDesktop ? "row" : "column",
           overflow: "visible",
           background: "#FFFFFF",
           position: "relative",
@@ -71,50 +73,56 @@ const HeroUltra = () => {
       >
 
         {/* ══════════════════════════════════════════
-            LEFT HALF — dark charcoal, all text content
+            LEFT / TOP — text content
         ══════════════════════════════════════════ */}
-        <div className="hu2-left" style={{
-          width: "50%",
+        <div style={{
+          width: isDesktop ? "50%" : "100%",
           flexShrink: 0,
           position: "relative",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "80px 56px 80px 56px",
+          padding: isMobile
+            ? "40px 20px 32px"
+            : isTablet
+            ? "48px 32px 40px"
+            : "80px 56px 80px 56px",
           overflow: "visible",
         }}>
 
-          {/* ── FAINT WATERMARK "SAGOSERVE" ── */}
-          <motion.div
-            aria-hidden
-            initial={{ opacity: 0 }}
-            animate={{ opacity: inView ? 1 : 0 }}
-            transition={{ delay: 1.2, duration: 1.4 }}
-          >
-            <div style={{
-              position: "absolute",
-              bottom: "42%",
-              left: "-20px",
-              transform: "translateY(50%)",
-              fontSize: "clamp(80px, 11vw, 140px)",
-              fontWeight: 900,
-              color: "rgba(95, 155, 245, 0.08)",
-              letterSpacing: "-0.04em",
-              whiteSpace: "nowrap",
-              userSelect: "none",
-              pointerEvents: "none",
-              lineHeight: 1,
-            }}>
-              SAGOSERVE
-            </div>
-          </motion.div>
+          {/* ── FAINT WATERMARK ── */}
+          {isDesktop && (
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: inView ? 1 : 0 }}
+              transition={{ delay: 1.2, duration: 1.4 }}
+            >
+              <div style={{
+                position: "absolute",
+                bottom: "42%",
+                left: "-20px",
+                transform: "translateY(50%)",
+                fontSize: "clamp(80px, 11vw, 140px)",
+                fontWeight: 900,
+                color: "rgba(95, 155, 245, 0.08)",
+                letterSpacing: "-0.04em",
+                whiteSpace: "nowrap",
+                userSelect: "none",
+                pointerEvents: "none",
+                lineHeight: 1,
+              }}>
+                SAGOSERVE
+              </div>
+            </motion.div>
+          )}
 
-          {/* ── BADGE ── "• STARTED IN 1965" */}
+          {/* ── BADGE ── */}
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={stagger(0)}
-            style={{ marginBottom: "28px" }}
+            style={{ marginBottom: isMobile ? "20px" : "28px" }}
           >
             <div
               className="badge-pill"
@@ -143,18 +151,13 @@ const HeroUltra = () => {
             </div>
           </motion.div>
 
-          {/* ── MEGA HEADLINE ──
-              Line 1: "Where Purity" — white, 900
-              Line 2: "Matters, And" — white
-              Line 3: "Excellence Comes" — gold
-              Line 4: "Alive" — gold
-          ── */}
-          <div className="hu2-headline" style={{ marginBottom: "24px", overflow: "visible" }}>
+          {/* ── MEGA HEADLINE ── */}
+          <div style={{ marginBottom: isMobile ? "20px" : "24px", overflow: "visible" }}>
             {[
-              { text: "Where Purity",    color: "#1a1a2e" },
-              { text: "Matters, And",    color: "#1a1a2e" },
-              { text: "Excellence Comes",   color: "#5f9bf5" },
-              { text: "Alive",           color: "#5f9bf5" },
+              { text: "Where Purity",     color: "#1a1a2e" },
+              { text: "Matters, And",     color: "#1a1a2e" },
+              { text: "Excellence Comes", color: "#5f9bf5" },
+              { text: "Alive",            color: "#5f9bf5" },
             ].map((line, i) => (
               <div key={i} style={{ overflow: "hidden" }}>
                 <motion.div
@@ -164,7 +167,11 @@ const HeroUltra = () => {
                 >
                   <span style={{
                     display: "block",
-                    fontSize: "clamp(44px, 5.6vw, 78px)",
+                    fontSize: isMobile
+                      ? "clamp(32px, 9vw, 44px)"
+                      : isTablet
+                      ? "clamp(36px, 7vw, 56px)"
+                      : "clamp(44px, 5.6vw, 78px)",
                     fontWeight: 900,
                     lineHeight: 1.06,
                     letterSpacing: "-0.03em",
@@ -177,17 +184,16 @@ const HeroUltra = () => {
             ))}
           </div>
 
-          {/* ── CHECKLIST — 2 columns ── */}
+          {/* ── CHECKLIST ── */}
           <motion.div
-            className="hu2-checklist"
             initial={{ opacity: 0, y: 18 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={stagger(4)}
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "10px 40px",
-              marginBottom: "28px",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: isMobile ? "8px 0" : "10px 40px",
+              marginBottom: isMobile ? "20px" : "28px",
             }}
           >
             {checkItems.map((item, i) => (
@@ -218,19 +224,20 @@ const HeroUltra = () => {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={stagger(6)}
             style={{
-              fontSize: "14px",
+              fontSize: isMobile ? "13px" : "14px",
               fontWeight: 400,
               lineHeight: 1.75,
               color: "#555555",
-              marginBottom: "36px",
+              marginBottom: isMobile ? "28px" : "36px",
               maxWidth: "520px",
             }}
-          ><br />
-            SAGOSERVE – Salem Starch and Sago Manufacturers’ Service Industrial   Co-operative Society Ltd., is registered under the Tamil Nadu Co-operative Societies Act, 1961, and functions under the administrative control of the Industries Commissioner and Director of Industries and Commerce, Government of Tamil Nadu.<br /><br />
+          >
+            <br />
+            SAGOSERVE – Salem Starch and Sago Manufacturers' Service Industrial Co-operative Society Ltd., is registered under the Tamil Nadu Co-operative Societies Act, 1961, and functions under the administrative control of the Industries Commissioner and Director of Industries and Commerce, Government of Tamil Nadu.<br /><br />
             The Society was formed to address challenges such as inadequate credit facilities, unorganized marketing, lack of warehousing infrastructure, and exploitation by middlemen.
           </motion.p>
 
-          {/* ── CTA PILL — "More About Us →" ── */}
+          {/* ── CTA PILL ── */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -273,51 +280,50 @@ const HeroUltra = () => {
         </div>
 
         {/* ══════════════════════════════════════════
-            RIGHT HALF — large photo, rounded corners with vertical labels
+            RIGHT / BOTTOM — photo
         ══════════════════════════════════════════ */}
         <div
-          className="hu2-right"
           style={{
-            flex: "1 1 0",
+            flex: isDesktop ? "1 1 0" : "none",
+            width: isDesktop ? undefined : "100%",
             position: "relative",
             overflow: "hidden",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             background: "#FFFFFF",
+            minHeight: isMobile ? "240px" : isTablet ? "340px" : undefined,
           }}
         >
-         
-          
-
-          {/* Photo without container */}
           <motion.img
-            className="hu2-photo"
             src="photo1.png"
             alt="Quality facility"
-            initial={{ opacity: 0, x: 50 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
+            initial={{ opacity: 0, x: isDesktop ? 50 : 0, y: isDesktop ? 0 : 30 }}
+            animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
             transition={{ delay: 0.3, duration: 1.1 }}
             style={{
               width: "100%",
-              height: "50%",
+              height: isDesktop ? "50%" : "100%",
               objectFit: "cover",
               objectPosition: "center",
               display: "block",
+              borderRadius: isDesktop ? "0" : isMobile ? "12px" : "16px",
+              margin: isDesktop ? "0" : "0 16px 32px",
+              maxWidth: isDesktop ? "none" : "calc(100% - 32px)",
             }}
           />
 
-          {/* Subtle vignette on left edge of photo for blending */}
+          {/* Vignette blend */}
           <div
             style={{
               position: "absolute",
               inset: 0,
               pointerEvents: "none",
-              background: "linear-gradient(to right, rgba(255,255,255,0.2) 0%, transparent 40%)",
+              background: isDesktop
+                ? "linear-gradient(to right, rgba(255,255,255,0.2) 0%, transparent 40%)"
+                : "linear-gradient(to bottom, rgba(255,255,255,0.15) 0%, transparent 30%)",
             }}
           />
-
-          
         </div>
 
       </section>
